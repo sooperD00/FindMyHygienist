@@ -1,0 +1,4 @@
+# Dev/test dependencies — not needed in production.
+# Install with: pip install -r requirements-dev.txt
+pytest
+pytest-asyncio
