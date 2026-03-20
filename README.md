@@ -45,52 +45,63 @@ npm run dev
 
 ```
 ohp-app/
+├── .gitignore                          # - [x] Sprint 0: Python + Node combined
 ├── README.md
 ├── docs/
-│   ├── architecture.md         # - [x] init: System design, data model, API surface
-│   ├── decisions.md            # - [x] init: ADRs (architecture decision records)
-│   ├── remaining-sprints.md    # - [x] init: What's next
-│   └── completed-sprints.md    # - [x] init: What's done
+│   ├── architecture.md                 # - [x] init: System design, data model, API surface
+│   ├── decisions.md                    # - [x] init: ADRs (architecture decision records)
+│   ├── remaining-sprints.md            # - [x] init: What's next
+│   └── completed-sprints.md            # - [x] init: What's done
 ├── backend/
+│   ├── .env.example                    # - [x] Sprint 0: DATABASE_PUBLIC_URL, S3 creds, etc.
+│   ├── alembic.ini                     # - [x] Sprint 0: Alembic config
+│   ├── requirements.txt                # - [x] Sprint 0: pip dependencies
+│   ├── migrations/
+│   │   └── env.py                      # - [x] Sprint 0: async Alembic setup
 │   ├── app/
 │   │   ├── __init__.py
-│   │   ├── main.py                 # - [x] Sprint 0: FastAPI app instance, router includes
-│   │   ├── config.py               # - [x] Sprint 0: Pydantic settings, reads .env
-│   │   ├── database.py             # - [x] Sprint 0: Async engine + session setup
+│   │   ├── main.py                     # - [x] Sprint 0: FastAPI app instance, health check, router includes
+│   │   ├── config.py                   # - [x] Sprint 0: Pydantic settings, reads .env
+│   │   ├── database.py                 # - [x] Sprint 0: Async engine + session setup
 │   │   ├── models/
-│   │   │   └── __init__.py         # - [x] Sprint 0: scaffold
+│   │   │   └── __init__.py             # - [x] Sprint 0: scaffold
 │   │   ├── routes/
-│   │   │   └── __init__.py         # - [x] Sprint 0: scaffold
-│   │   ├── services/
-│   │   │   └── __init__.py         # - [x] Sprint 0: scaffold
-│   │   └── config.py
-│   ├── .env                        # - [x] Sprint 0: .gitignored
-│   ├── .env.example                # - [x] Sprint 0: DATABASE_PUBLIC_URL, S3 creds, etc
-│   ├── alembic.ini                 # - [x] Sprint 0: config almebic
-│   ├── migrations/
-│   │   ├── env.py                  # - [x] Sprint 0: config alembic
-│   ├── requirements.txt                 # - [x] Sprint 0: basic requirements
-│   └── tests/                      # - [ ] PyTests
+│   │   │   └── __init__.py             # - [x] Sprint 0: scaffold
+│   │   └── services/
+│   │       └── __init__.py             # - [x] Sprint 0: scaffold
+│   └── tests/                          # - [ ] PyTests
 └── frontend/
-    ├── src/
-    │   ├── __tests__               # - [ ] vite tests
-    │   ├── App.tsx                 # - [x] Sprint 0: replace the Vite default
-    │   ├── api/
-    │   │   └── client.ts           # - [x] Sprint 0: stub: typed API functions for endpoints
-    │   ├── components/
-    │   │   └── Layout.tsx          # - [x] Sprint 0: shell (nav and footer) / layout route with <Outlet />
-    │   └── pages/
-    │       ├── Home.tsx            # - [x] Sprint 0: stub
-    │       ├── Search.tsx          # - [x] Sprint 0: stub
-    │       ├── Profile.tsx         # - [x] Sprint 0: stub
-    │       ├── About.tsx           # - [x] Sprint 0: stub
-    │       ├── Join.tsx            # - [x] Sprint 0: stub
-    │       ├── Login.tsx           # - [x] Sprint 0: stub
-    │       ├── Dashboard.tsx       # - [x] Sprint 0: stub
-    │       ├── Admin.tsx           # - [x] Sprint 0: stub
-    │       └── NotFound.tsx        # - [x] Sprint 0: stub
-    │   ├── package.json
-    │   └── vite.config.ts          # - [x] Sprint 0: Vite proxy so FE can hit FastAPI BE
+    ├── .gitignore                      # - [x] Sprint 0: Vite/Node defaults
+    ├── index.html                      # - [x] Sprint 0: Vite entry point
+    ├── package.json                    # - [x] Sprint 0: React 19, react-router-dom v7, Vite 8
+    ├── vite.config.ts                  # - [x] Sprint 0: Vite proxy /api/* → localhost:8000
+    ├── tsconfig.json                   # - [x] Sprint 0: TypeScript project references
+    ├── tsconfig.app.json               # - [x] Sprint 0: app-level TS config
+    ├── tsconfig.node.json              # - [x] Sprint 0: node-level TS config
+    ├── eslint.config.js                # - [x] Sprint 0: ESLint flat config
+    ├── public/                         # - [x] Sprint 0: static assets (Vite default)
+    └── src/
+        ├── main.tsx                    # - [x] Sprint 0: React DOM entry point
+        ├── App.tsx                     # - [x] Sprint 0: top-level routing table
+        ├── App.css                     # - [x] Sprint 0: app styles (Vite default, to be replaced)
+        ├── index.css                   # - [x] Sprint 0: global styles (Vite default, to be replaced)
+        ├── api/
+        │   └── client.ts              # - [x] Sprint 0: typed API client stub (health check wired)
+        ├── assets/
+        │   └── hero.png               # - [x] Sprint 0: landing page hero image
+        ├── components/
+        │   └── Layout.tsx             # - [x] Sprint 0: shell (nav + footer) with <Outlet />
+        ├── pages/
+        │   ├── Home.tsx               # - [x] Sprint 0: stub
+        │   ├── Search.tsx             # - [x] Sprint 0: stub
+        │   ├── Profile.tsx            # - [x] Sprint 0: stub
+        │   ├── About.tsx              # - [x] Sprint 0: stub
+        │   ├── Join.tsx               # - [x] Sprint 0: stub
+        │   ├── Login.tsx              # - [x] Sprint 0: stub
+        │   ├── Dashboard.tsx          # - [x] Sprint 0: stub
+        │   ├── Admin.tsx              # - [x] Sprint 0: stub
+        │   └── NotFound.tsx           # - [x] Sprint 0: stub
+        └── __tests__/                 # - [ ] Vitest tests
 ```
 
 ## Docs
