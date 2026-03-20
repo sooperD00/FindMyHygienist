@@ -64,7 +64,14 @@ ohp-app/
 │   │   ├── config.py                   # - [x] Sprint 0: Pydantic settings, reads .env
 │   │   ├── database.py                 # - [x] Sprint 0: Async engine + session setup
 │   │   ├── models/
-│   │   │   └── __init__.py             # - [x] Sprint 0: scaffold
+│   │   │   ├── __init__.py             # - [x] Sprint 0: scaffold
+│   │   │   ├── enums.py               # - [ ] Sprint 1: UserRole, CredentialType, ProviderType, ProviderStatus, Availability, FeedbackType
+│   │   │   ├── user.py                # - [ ] Sprint 1: User (auth identity for everyone)
+│   │   │   ├── credential.py          # - [ ] Sprint 1: Credential (reference table, seeded from credentials.json)
+│   │   │   ├── provider.py            # - [ ] Sprint 1: Provider, ProviderCredential, ProviderLocation
+│   │   │   └── feedback.py            # - [ ] Sprint 1: Feedback
+│   │   ├── data/
+│   │   │   └── credentials.json       # - [ ] Sprint 1: 17 Oregon credential seed entries
 │   │   ├── routes/
 │   │   │   └── __init__.py             # - [x] Sprint 0: scaffold
 │   │   └── services/

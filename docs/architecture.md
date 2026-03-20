@@ -37,32 +37,86 @@ There is one admin user (Nicole) who reviews and approves provider profiles befo
 
 ## Data Model
 
-### Provider (the core table)
+<!-- Six tables. User holds auth for everyone (providers and Nicole).
+     Provider is the public-facing profile. Credential is a reference
+     table seeded from Oregon licensing data. ProviderCredential is the
+     join. ProviderLocation supports multi-site practitioners.
+     Feedback is standalone. See ADR-009 and ADR-010. -->
+
+### User (auth identity — everyone)
+
+<!-- Separates login credentials from the provider profile. Nicole's
+     admin account is a User with role=ADMIN and no Provider record.
+     A dental hygienist is a User with role=PROVIDER and a one-to-one
+     Provider record. Future roles (facility manager, ODHA staff) get
+     a new enum value, not a new table. -->
 
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | UUID | PK |
-| `email` | str | Login credential, not necessarily public-facing |
+| `email` | str | Unique, login credential |
 | `password_hash` | str | bcrypt |
-| `status` | enum | `PENDING`, `APPROVED`, `CHANGES_REQUESTED`, `SUSPENDED` |
-| `auto_approved` | bool | True if created during conference/fast-track mode |
-| `reviewed_by` | str | Admin identifier, nullable |
-| `reviewed_at` | datetime | Nullable |
-| `draft` | JSON | Pending edits to an approved profile; null when clean |
+| `role` | enum | `PROVIDER`, `ADMIN` |
+| `is_active` | bool | Default true; false = soft-deleted / locked out |
 | `created_at` | datetime | |
 | `updated_at` | datetime | |
 
-### Provider Profile Fields
+### Credential (reference table — seeded, not user-editable)
 
-<!-- These live as columns on the provider table for now. If the profile
-     gets complex enough to warrant a separate table, that's ADR material. -->
+<!-- Oregon-specific oral health credentials. Seeded from credentials.json
+     (ported from oral-health-providers project). The patientDescription
+     powers the "tappable credential chips" feature from Focus Group #1:
+     patients tap "EPDH" and see "Can provide care WITHOUT a dentist
+     present — in schools, nursing homes, mobile clinics, or their own
+     practice." Providers select from this list; they don't type codes
+     freehand. -->
 
 | Field | Type | Notes |
 |-------|------|-------|
+| `code` | str | PK, e.g. `"RDH"`, `"EPDH"`, `"LAP"` |
+| `full_name` | str | e.g. "Expanded Practice Dental Hygienist" |
+| `patient_description` | str | Plain-English explanation for patients |
+| `credential_type` | enum | `LICENSE`, `DEGREE`, `PERMIT`, `SPECIALTY` |
+
+Seed data (17 entries):
+
+| Code | Type | Full Name |
+|------|------|-----------|
+| RDH | License | Registered Dental Hygienist |
+| EPDH | License | Expanded Practice Dental Hygienist |
+| DDS | License | Doctor of Dental Surgery |
+| DMD | License | Doctor of Dental Medicine |
+| EFDA | License | Expanded Function Dental Assistant |
+| DT | License | Dental Therapist |
+| ASDH | Degree | Associate of Science in Dental Hygiene |
+| BSDH | Degree | Bachelor of Science in Dental Hygiene |
+| LAP | Permit | Local Anesthesia Permit |
+| NOP | Permit | Nitrous Oxide Permit |
+| RFE | Permit | Restorative Functions Endorsement |
+| PERIO | Specialty | Periodontist |
+| ENDO | Specialty | Endodontist |
+| ORTHO | Specialty | Orthodontist |
+| OMS | Specialty | Oral & Maxillofacial Surgeon |
+| PEDO | Specialty | Pediatric Dentist |
+| PROS | Specialty | Prosthodontist |
+
+### Provider (the public-facing profile)
+
+<!-- One-to-one with User (user_id FK). All profile fields live here as
+     columns — no separate "profile" table. The structured arrays
+     (services, specialties, populations_served, insurance_accepted)
+     power search filters. The freeform tags field lets providers
+     express what makes them *them* beyond what structured fields capture
+     ("LGBTQ-affirming", "anxiety-friendly", "CAMBRA", "trauma-informed").
+     Credentials come from the join table, not a JSON column. -->
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | UUID | PK |
+| `user_id` | UUID | FK → User, unique (one-to-one) |
 | `display_name` | str | Full name as shown publicly |
 | `slug` | str | URL-safe version of name, e.g. `ginger-davidson` |
-| `provider_type` | enum | `DENTAL_HYGIENIST`, `DENTIST`, `DENTAL_THERAPIST`, etc. |
-| `credentials` | list[str] | Self-reported, e.g. `["RDH", "BSDH"]` — stored as JSON array |
+| `provider_type` | enum | `DENTAL_HYGIENIST`, `DENTIST`, `DENTAL_THERAPIST`, `DENTAL_ASSISTANT`, `OTHER` |
 | `title_line` | str | Freeform line under their name, e.g. "Registered Dental Hygienist, BSDH" |
 | `bio` | text | Long-form personal statement |
 | `mission_statement` | text | Optional — "why I do this work" |
@@ -70,26 +124,55 @@ There is one admin user (Nicole) who reviews and approves provider profiles befo
 | `phone` | str | Public contact phone (optional) |
 | `public_email` | str | Public contact email (optional, separate from login email) |
 | `website` | str | Optional |
-| `languages` | list[str] | JSON array |
-| `services` | list[str] | e.g. `["cleanings", "sealants", "fluoride treatments", "perio maintenance"]` |
-| `specialties` | list[str] | e.g. `["pediatric", "geriatric", "periodontal"]` |
-| `populations_served` | list[str] | e.g. `["children", "seniors", "Spanish-speaking", "uninsured"]` |
+| `languages` | list[str] | JSON array, e.g. `["English", "Spanish"]` |
+| `services` | list[str] | Structured, e.g. `["cleanings", "sealants", "fluoride treatments", "perio maintenance"]` |
+| `specialties` | list[str] | Structured, e.g. `["pediatric", "geriatric", "periodontal"]` |
+| `populations_served` | list[str] | Structured, e.g. `["children", "seniors", "Spanish-speaking", "uninsured"]` |
+| `insurance_accepted` | list[str] | e.g. `["OHP", "Delta Dental", "Cash/Sliding Scale"]` |
+| `tags` | list[str] | Freeform self-expression, e.g. `["LGBTQ-affirming", "anxiety-friendly", "trauma-informed"]` |
 | `availability` | enum | `IN_PERSON`, `MOBILE`, `BOTH` |
 | `accepting_new_patients` | bool | |
+| `max_travel_miles` | int | Nullable — relevant for mobile providers |
+| `accepts_texts` | bool | Default false |
+| `accepts_calls` | bool | Default true |
+| `status` | enum | `PENDING`, `APPROVED`, `CHANGES_REQUESTED`, `SUSPENDED` |
+| `auto_approved` | bool | True if created during conference/fast-track mode |
+| `reviewed_by` | UUID | FK → User, nullable (which admin reviewed) |
+| `reviewed_at` | datetime | Nullable |
+| `draft` | JSON | Pending edits to an approved profile; null when clean |
+| `created_at` | datetime | |
+| `updated_at` | datetime | |
 
-### Provider Location
+### ProviderCredential (join table)
 
-<!-- Separate table because a provider might serve multiple locations
-     (their own office + a community health clinic, etc.) -->
+<!-- Many-to-many between Provider and Credential. A provider selects
+     from valid Oregon credentials; the frontend renders them as
+     tappable chips using the Credential table's patient_description. -->
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `provider_id` | UUID | FK → Provider, composite PK |
+| `credential_code` | str | FK → Credential.code, composite PK |
+
+### ProviderLocation
+
+<!-- Separate table: a provider might serve multiple locations (their
+     own office + a community health clinic + a school-based program).
+     Label tells patients *what kind* of place it is. Practice name is
+     per-location because a hygienist might work at "Pacific Dental
+     Services" on Tuesdays and "Salem Community Health Center" on
+     Thursdays. -->
 
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | UUID | PK |
 | `provider_id` | UUID | FK → Provider |
+| `label` | str | e.g. "Main Office", "Mobile Area", "School-Based Program", "Home Base" |
+| `practice_name` | str | Optional — e.g. "Pacific Dental Services" (may differ per location) |
 | `address_line1` | str | |
 | `address_line2` | str | Optional |
 | `city` | str | Indexed |
-| `state` | str | Always "OR" for now, but don't hardcode |
+| `state` | str | Always "OR" for now, but don't hardcode (ADR-008) |
 | `zip_code` | str | Indexed |
 | `latitude` | float | For Haversine search |
 | `longitude` | float | For Haversine search |
@@ -114,9 +197,9 @@ There is one admin user (Nicole) who reviews and approves provider profiles befo
 <!-- No HIPAA here — there's no medical info about patients. But provider
      PII still matters. Here's the breakdown: -->
 
-**Intentionally public (the whole point of the directory):** display_name, provider_type, credentials, bio, photo, phone, public_email, website, services, specialties, practice addresses.
+**Intentionally public (the whole point of the directory):** display_name, provider_type, credentials (via join table), bio, photo, phone, public_email, website, services, specialties, populations_served, insurance_accepted, tags, languages, practice locations, availability, contact preferences.
 
-**Private (never exposed via public API):** login email (if different from public_email), password_hash, draft edits, admin review metadata.
+**Private (never exposed via public API):** User.email (login credential), User.password_hash, Provider.draft, admin review metadata (reviewed_by, reviewed_at), User.role.
 
 **What to hash/encrypt:** Only `password_hash` (bcrypt, handled by the auth library). Everything else is either intentionally public or simply access-controlled at the API layer (not returned in public endpoints). No field-level encryption needed — the provider is choosing to publish their info. Standard DB-level encryption at rest (Railway Postgres provides this) is sufficient.
 
@@ -128,31 +211,33 @@ There is one admin user (Nicole) who reviews and approves provider profiles befo
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/providers` | Search/list providers. Query params: `city`, `zip`, `lat`/`lng`/`radius`, `provider_type`, `specialty`, `keyword`, `page`, `per_page` |
-| `GET` | `/api/providers/{slug}/{id}` | Full provider profile (approved only) |
+| `GET` | `/api/providers` | Search/list providers. Query params: `city`, `zip`, `lat`/`lng`/`radius`, `provider_type`, `specialty`, `insurance`, `tag`, `keyword`, `page`, `per_page` |
+| `GET` | `/api/providers/{slug}/{id}` | Full provider profile (approved only), includes credentials with patient descriptions |
 | `GET` | `/api/providers/types` | Enum values for provider types |
 | `GET` | `/api/providers/specialties` | Distinct specialty values (for filter UI) |
+| `GET` | `/api/credentials` | All valid credential codes with full_name, patient_description, type (powers intake form + tappable chips) |
 | `POST` | `/api/feedback` | Submit feedback or report an issue |
 
 ### Auth
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/api/auth/register` | Provider signup (creates account + profile in PENDING status) |
+| `POST` | `/api/auth/register` | Provider signup — creates User (role=PROVIDER) + Provider (status=PENDING) in one transaction |
 | `POST` | `/api/auth/login` | Returns session token or JWT |
 | `POST` | `/api/auth/logout` | Invalidate session |
-| `GET` | `/api/auth/me` | Current user info |
+| `GET` | `/api/auth/me` | Current User info (id, email, role) + linked Provider id if role=PROVIDER |
 
 ### Provider (authenticated, own profile)
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/me/profile` | Get own profile including draft |
+| `GET` | `/api/me/profile` | Get own profile including draft and credentials |
 | `PUT` | `/api/me/profile` | Edit profile (lands in draft if already approved) |
+| `PUT` | `/api/me/credentials` | Set credential codes (replaces full list) |
 | `POST` | `/api/me/photo` | Upload profile photo |
 | `DELETE` | `/api/me/photo` | Remove profile photo |
 
-### Admin (authenticated, admin only)
+### Admin (authenticated, role=ADMIN only)
 
 | Method | Path | Description |
 |--------|------|-------------|
