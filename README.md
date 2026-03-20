@@ -28,7 +28,7 @@ cd ohp-app
 
 # Backend
 cd backend
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv && source .venv/Scripts/activate
 pip install -r requirements.txt
 cp .env.example .env          # fill in DATABASE_URL, S3 creds, etc.
 uvicorn app.main:app --reload
@@ -41,31 +41,56 @@ npm run dev
 
 ## Project Structure
 
+> `[x]` = implemented and on disk. `[ ]` = planned — the file doesn't exist yet but its location is part of the design. This tree is both a map and a roadmap.
+
 ```
 ohp-app/
 ├── README.md
 ├── docs/
-│   ├── architecture.md        # System design, data model, API surface
-│   ├── decisions.md           # ADRs (architecture decision records)
-│   ├── remaining-sprints.md   # What's next
-│   └── completed-sprints.md   # What's done
+│   ├── architecture.md         # - [x] init: System design, data model, API surface
+│   ├── decisions.md            # - [x] init: ADRs (architecture decision records)
+│   ├── remaining-sprints.md    # - [x] init: What's next
+│   └── completed-sprints.md    # - [x] init: What's done
 ├── backend/
 │   ├── app/
-│   │   ├── main.py
+│   │   ├── __init__.py
+│   │   ├── main.py                 # - [x] Sprint 0: FastAPI app instance, router includes
+│   │   ├── config.py               # - [x] Sprint 0: Pydantic settings, reads .env
+│   │   ├── database.py             # - [x] Sprint 0: Async engine + session setup
 │   │   ├── models/
+│   │   │   └── __init__.py         # - [x] Sprint 0: scaffold
 │   │   ├── routes/
+│   │   │   └── __init__.py         # - [x] Sprint 0: scaffold
 │   │   ├── services/
+│   │   │   └── __init__.py         # - [x] Sprint 0: scaffold
 │   │   └── config.py
-│   ├── requirements.txt
-│   └── .env.example
+│   ├── .env                        # - [x] Sprint 0: .gitignored
+│   ├── .env.example                # - [x] Sprint 0: DATABASE_PUBLIC_URL, S3 creds, etc
+│   ├── alembic.ini                 # - [x] Sprint 0: config almebic
+│   ├── migrations/
+│   │   ├── env.py                  # - [x] Sprint 0: config alembic
+│   ├── requirements.txt                 # - [x] Sprint 0: basic requirements
+│   └── tests/                      # - [ ] PyTests
 └── frontend/
     ├── src/
-    │   ├── pages/
-    │   ├── components/
+    │   ├── __tests__               # - [ ] vite tests
+    │   ├── App.tsx                 # - [x] Sprint 0: replace the Vite default
     │   ├── api/
-    │   └── App.tsx
-    ├── package.json
-    └── vite.config.ts
+    │   │   └── client.ts           # - [x] Sprint 0: stub: typed API functions for endpoints
+    │   ├── components/
+    │   │   └── Layout.tsx          # - [x] Sprint 0: shell (nav and footer) / layout route with <Outlet />
+    │   └── pages/
+    │       ├── Home.tsx            # - [x] Sprint 0: stub
+    │       ├── Search.tsx          # - [x] Sprint 0: stub
+    │       ├── Profile.tsx         # - [x] Sprint 0: stub
+    │       ├── About.tsx           # - [x] Sprint 0: stub
+    │       ├── Join.tsx            # - [x] Sprint 0: stub
+    │       ├── Login.tsx           # - [x] Sprint 0: stub
+    │       ├── Dashboard.tsx       # - [x] Sprint 0: stub
+    │       ├── Admin.tsx           # - [x] Sprint 0: stub
+    │       └── NotFound.tsx        # - [x] Sprint 0: stub
+    │   ├── package.json
+    │   └── vite.config.ts          # - [x] Sprint 0: Vite proxy so FE can hit FastAPI BE
 ```
 
 ## Docs
