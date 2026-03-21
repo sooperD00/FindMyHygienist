@@ -56,6 +56,7 @@ ohp-app/
 │   ├── .env.example                    # - [x] Sprint 0: DATABASE_PUBLIC_URL, S3 creds, etc.
 │   ├── alembic.ini                     # - [x] Sprint 0: Alembic config
 │   ├── requirements.txt                # - [x] Sprint 0: pip dependencies
+│   ├── requirements-dev.txt            # - [x] Sprint 1: dev dependencies (pytest)
 │   ├── migrations/
 │   │   └── env.py                      # - [x] Sprint 0: async Alembic setup
 │   ├── app/
@@ -65,13 +66,13 @@ ohp-app/
 │   │   ├── database.py                 # - [x] Sprint 0: Async engine + session setup
 │   │   ├── models/
 │   │   │   ├── __init__.py             # - [x] Sprint 0: scaffold
-│   │   │   ├── enums.py               # - [ ] Sprint 1: UserRole, CredentialType, ProviderType, ProviderStatus, Availability, FeedbackType
-│   │   │   ├── user.py                # - [ ] Sprint 1: User (auth identity for everyone)
-│   │   │   ├── credential.py          # - [ ] Sprint 1: Credential (reference table, seeded from credentials.json)
-│   │   │   ├── provider.py            # - [ ] Sprint 1: Provider, ProviderCredential, ProviderLocation
-│   │   │   └── feedback.py            # - [ ] Sprint 1: Feedback
+│   │   │   ├── enums.py                # - [x] Sprint 1: UserRole, CredentialType, ProviderType, ProviderStatus, Availability, FeedbackType
+│   │   │   ├── user.py                 # - [x] Sprint 1: User (auth identity for everyone)
+│   │   │   ├── credential.py           # - [x] Sprint 1: Credential (reference table, seeded from credentials.json)
+│   │   │   ├── provider.py             # - [x] Sprint 1: Provider, ProviderCredential, ProviderLocation
+│   │   │   └── feedback.py             # - [x] Sprint 1: Feedback
 │   │   ├── data/
-│   │   │   └── credentials.json       # - [ ] Sprint 1: 17 Oregon credential seed entries
+│   │   │   └── credentials.json        # - [x] Sprint 1: 17 Oregon credential seed entries
 │   │   ├── routes/
 │   │   │   └── __init__.py             # - [x] Sprint 0: scaffold
 │   │   └── services/

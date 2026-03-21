@@ -55,7 +55,7 @@ There is one admin user (Nicole) who reviews and approves provider profiles befo
 |-------|------|-------|
 | `id` | UUID | PK |
 | `email` | str | Unique, login credential |
-| `password_hash` | str | bcrypt |
+| `password_hash` | str | argon2id |
 | `role` | enum | `PROVIDER`, `ADMIN` |
 | `is_active` | bool | Default true; false = soft-deleted / locked out |
 | `created_at` | datetime | |
