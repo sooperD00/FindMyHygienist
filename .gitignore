@@ -1,6 +1,7 @@
 # === For the Dev ===
 DEVLOG
 .env
+backend/tests/results*.txt
 
 
 

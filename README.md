@@ -77,7 +77,9 @@ ohp-app/
 │   │   │   └── __init__.py             # - [x] Sprint 0: scaffold
 │   │   └── services/
 │   │       └── __init__.py             # - [x] Sprint 0: scaffold
-│   └── tests/                          # - [ ] PyTests
+│   └── tests/                          # - [x] PyTests: 25/25 pass
+│       ├── __init__.py
+│       └──test_models.py               # - [x] Sprint 1: 25 tests: enum completeness, credentials.json integrity, model defaults
 └── frontend/
     ├── .gitignore                      # - [x] Sprint 0: Vite/Node defaults
     ├── index.html                      # - [x] Sprint 0: Vite entry point
