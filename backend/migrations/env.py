@@ -9,11 +9,17 @@ from alembic import context
 
 from app.config import settings
 
-# Import all models here so SQLModel.metadata knows about them.
-# As you add models, add their imports here.
+# Import all models so SQLModel.metadata knows about them.
+# The __init__ re-exports every model — one import registers all tables.
 from sqlmodel import SQLModel
-# from app.models.provider import Provider, ProviderLocation
-# from app.models.feedback import Feedback
+from app.models import (  # noqa: F401
+    User,
+    Credential,
+    Provider,
+    ProviderCredential,
+    ProviderLocation,
+    Feedback,
+)
 
 # Alembic Config object
 config = context.config
