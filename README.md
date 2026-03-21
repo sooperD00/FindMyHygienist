@@ -14,7 +14,7 @@ This is an Oregon-specific project in partnership with the [Oregon Dental Hygien
 | Frontend | React, TypeScript, Vite |
 | Database | PostgreSQL (Railway) |
 | Image Storage | S3-compatible object storage (DO Spaces or Cloudflare R2) |
-| Auth | TBD — session-based or JWT, decided in Sprint 1 |
+| Auth | TBD — session-based or JWT, decided in Sprint 2 |
 | Deployment | Railway and/or DigitalOcean App Platform |
 
 Monorepo: `frontend/` and `backend/` at the root.

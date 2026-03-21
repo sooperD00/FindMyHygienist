@@ -70,7 +70,7 @@
 ## ADR-006: Auth approach
 
 **Date:** 2026-03-19
-**Status:** Proposed — finalize in Sprint 1
+**Status:** Proposed — finalize in Sprint 2
 
 **Context:** Providers need to log in to create and edit their profiles. Nicole needs admin access.
 
