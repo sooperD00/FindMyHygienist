@@ -41,16 +41,37 @@
 
 ---
 
-## ADR-004: Static geocoding lookup for MVP
+## ADR-004: Nominatim geocoding API (revised — replaces static lookup table)
 
-**Date:** 2026-03-19
-**Status:** Accepted
+**Date:** 2026-03-21 (revised)
+**Status:** Accepted (supersedes original ADR-004)
 
-**Context:** The search page converts a city name or zip code to lat/lng for Haversine distance queries.
+**Context:** The search page converts a city name, zip code, or address to lat/lng for Haversine distance queries. The original decision was a static lookup table of ~400 Oregon cities and ~500 zip codes mapped to centroid coordinates. But ORToothFairy (the prototype) already has a working geocoding implementation using Nominatim (OpenStreetMap's free geocoding API), and a real-world edge case makes the static table insufficient: traveling dental hygienists may live in Washington, Idaho, or California but serve Oregon patients. Their `max_travel_miles` field handles the filtering — but only if the system can geocode their non-Oregon zip code in the first place.
 
-**Decision:** Ship with a static lookup table of Oregon cities and zip codes mapped to their centroid coordinates. No external geocoding API for MVP.
+**Decision:** Use Nominatim (OpenStreetMap) for geocoding, ported from ORToothFairy's `GeocodingService`. Three input methods: direct lat/lng (no geocoding needed), zip code, or address. Nominatim is free, requires no API key, and covers the entire US (and world) — no need to curate a list of border zips. Haversine distance calculation runs in Python application code (not SQL), matching ORToothFairy's pattern: load approved providers with their locations, calculate distances, filter by both the user's search radius and the provider's `max_travel_miles`, sort by distance.
 
-**Rationale:** Oregon has ~400 incorporated cities and ~500 zip codes. A JSON file or small DB table is fast, free, requires no API key, and works offline. Accuracy is "centroid of the city/zip" which is good enough when the search radius is 10-25 miles. Upgrade to a geocoding API (Nominatim/Mapbox) later if users need street-level input or autocomplete.
+**Rationale:**
+
+- **Cross-state coverage for free.** A hygienist in Vancouver, WA (zip 98660) who travels to Portland is a real use case. Nominatim geocodes any US zip — no guessing which border zips to include. The `max_travel_miles` field does the geographic filtering; the geocoder just needs to resolve the starting point.
+- **Already proven.** ORToothFairy's `GeocodingService` + `SearchService` + `SearchController` are ~170 lines of C# that translate to ~100 lines of Python. Nicole wrote this code and understands every piece. The port is a translation exercise, not a design exercise.
+- **Zero maintenance.** No JSON file of ~900 rows to source, validate, and keep current. Oregon occasionally adds or renames zip codes; Nominatim handles that upstream.
+- **Haversine in application code, not SQL.** At OHP's scale (hundreds of providers, not millions), loading approved providers and calculating distances in Python is fast, testable, and readable. No PostGIS, no complex SQL, no mixing business logic into queries. If scale ever demands it, a bounding-box pre-filter in the SQL query is a simple optimization that doesn't change the architecture.
+
+**Tradeoffs accepted:**
+
+- **Runtime dependency.** Nominatim is an external HTTP call (~200–500ms per geocode). If it's down, zip/address search fails (lat/lng search still works since it skips geocoding). At OHP's scale and audience, this is acceptable — patients search from home on normal internet, not from a conference booth on flaky wifi. If Nominatim reliability ever becomes a problem, a caching layer or static fallback table can be added without changing the API contract.
+- **Rate limiting.** Nominatim's usage policy asks for max 1 request/second and a descriptive User-Agent header. OHP's search volume (single-digit QPS at peak) is well within this. The `User-Agent` header is already set in the ORToothFairy implementation.
+- **No autocomplete.** Nominatim's free API doesn't power a type-ahead search box. For MVP, the user types a zip or city and hits search. Autocomplete is a post-conference enhancement if needed (Mapbox or Google Places).
+
+**What this changes in the sprint plan:**
+
+- Drop: "Static Oregon geocoding data — JSON file or DB table of ~400 cities / ~500 zips with centroid lat/lng"
+- Drop: "Geocode existing provider locations — backfill lat/lng from city/zip using the new lookup table, and geocode on save going forward"
+- Add: Geocoding service (port from ORToothFairy's `GeocodingService`) — ~30 lines of Python, calls Nominatim for zip/address resolution
+- Add: Geocode provider locations on save — when a provider adds/edits a location, call Nominatim to populate lat/lng from their address or zip
+- Keep: Haversine distance query, but in Python application code rather than SQL
+
+**Original decision (for the record):** Static lookup table of Oregon cities/zips with centroid coordinates. No external API. Fast, free, offline-capable. Rejected because it can't handle cross-state providers without manually curating border zips from neighboring states, and the maintenance burden is unnecessary when a working Nominatim implementation already exists.
 
 ---
 
