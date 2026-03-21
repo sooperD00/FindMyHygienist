@@ -2,6 +2,9 @@
 DEVLOG
 .env
 backend/tests/results*.txt
+__pycache__/
+.pytest_cache/
+*.pyc
 
 
 
