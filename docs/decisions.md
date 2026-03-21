@@ -67,24 +67,26 @@
 
 ---
 
-## ADR-006: Auth approach
+## ADR-006: Session-based auth with server-side sessions in Postgres
 
-**Date:** 2026-03-19
-**Status:** Proposed — finalize in Sprint 2
+**Date:** 2026-03-21
+**Status:** Accepted
 
-**Context:** Providers need to log in to create and edit their profiles. Nicole needs admin access.
+**Context:** Providers need to log in to create and edit their profiles. Nicole needs admin access (User.role enum (PROVIDER, ADMIN) on the separate User table — see ADR-009. Expandable if we ever need facility managers, ODHA staff, etc.). The auth system touches every authenticated endpoint and sets the security posture for the entire application.
 
-**Decision:** TBD. Candidates:
+**Decision:** Server-side sessions stored in Postgres, delivered to the browser via HTTP-only secure cookie. A `sessions` table holds active sessions (session_id, user_id, created_at, expires_at). Login inserts a row and sets the cookie. Logout deletes the row. Every authenticated request reads the cookie, looks up the session in Postgres, and loads the user. CSRF protection via a synchronizer token pattern (second cookie or header that the frontend sends explicitly on state-changing requests).
 
-1. **Session-based auth** (server-side sessions in Postgres or Redis, session cookie). Simpler mental model, no token refresh logic, works naturally with browser cookies.
-2. **JWT** (access token + refresh token). Stateless, no server-side session store, but more moving parts (token refresh, secure storage in frontend).
-3. **Third-party auth** (Auth0, Clerk, Supabase Auth). Least code, most features (magic links, OAuth, password reset), but adds a dependency and possible cost.
+**Rationale:** Sessions use a whitelist model — a row exists if and only if the user is logged in. Logout is a DELETE, not an entry on a blacklist that needs pruning. The cookie is an opaque session ID; no user data, role, or secrets travel to the browser. The mental model is 1:1: one login = one row, one logout = one deletion. This matches the "backend-persistent data object" pattern Nicole is already comfortable with from ApplicationPipeline's session handling.
 
-**Leaning toward:** Session-based or a lightweight third-party service. Will decide when the sprint starts and we see what the FastAPI ecosystem offers with minimal boilerplate.
+**Alternatives considered:**
 
-<!-- Admin auth for Nicole: User.role enum (PROVIDER, ADMIN) on the
-     separate User table — see ADR-009. Expandable if we ever need
-     facility managers, ODHA staff, etc. -->
+- **JWT (access token + refresh token):** The FastAPI ecosystem's default path — more tutorials, built-in `OAuth2PasswordBearer` support, `python-jose` does the heavy lifting. But JWTs are valid until they expire regardless of logout. Real logout requires a revoked-tokens blacklist table that grows monotonically and needs periodic cleanup. The blacklist approach inverts the logic: tokens are valid by default, the table exists to say "except this one." At OHP's scale (dozens of providers, one backend server) the statelessness benefit is irrelevant, and the cleanup burden is a worse tradeoff than writing ~60–80 lines of session middleware without ecosystem handholding. **Fallback plan:** if session-based auth hits a wall during implementation, revert to the Sprint 1 tag and re-attempt with JWT. The User model, password hashing (argon2id, ADR-011), and registration flow are identical either way — only the session/token layer changes.
+
+- **Third-party auth (Auth0, Clerk, Supabase Auth):** Least application code, most features for free (password reset, email verification, brute-force protection). But the User table becomes a shadow copy of an external record, registration requires syncing two sources of truth via webhooks, and every auth operation adds a network hop to a third party. At the ODHA conference, a provider standing at the signup booth can't wait for Auth0's webhook on conference wifi. The features these services provide for free (password reset, email verification) are explicitly post-conference backlog. **Fallback plan:** available as a last resort if both session-based and JWT approaches fail, but this is unlikely.
+
+**CSRF note:** Cookie-based auth requires CSRF protection because the browser sends the session cookie automatically — a malicious page could forge state-changing requests on behalf of a logged-in provider. The synchronizer token pattern (a CSRF token the frontend includes explicitly on POST/PUT/DELETE requests, validated server-side) is ~20 lines of middleware. JWT-in-localStorage avoids this because JavaScript must manually attach the token, but that trades CSRF safety for XSS exposure — the wrong tradeoff.
+
+<!-- Admin auth for Nicole:  -->
 
 ---
 
