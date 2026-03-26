@@ -23,3 +23,4 @@ from app.models.provider import (  # noqa: F401
     ProviderLocation,
 )
 from app.models.feedback import Feedback  # noqa: F401
+from app.models.session import Session  # noqa: F401
