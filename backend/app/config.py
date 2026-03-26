@@ -1,6 +1,10 @@
 """
 Pydantic settings, reads .env (single source of truth)
-(no defaults / silent fallbacks)
+(no defaults / silent fallbacks — except where noted)
+
+Sprint 2 additions: session_lifetime_hours, debug, cors_origins,
+admin_password. The admin_password is only needed when running
+`python -m app.seed` — it's not read at app startup.
 """
 
 from pydantic import Field
@@ -12,6 +16,22 @@ class Settings(BaseSettings):
     secret_key: str
     admin_email: str
     auto_approve: bool
+
+    # Session config (ADR-006)
+    session_lifetime_hours: int = Field(default=168)  # 7 days
+
+    # Controls cookie Secure flag. True in prod (HTTPS required),
+    # False in dev so localhost works without certs.
+    debug: bool = Field(default=False)
+
+    # Comma-separated allowed origins for CORS, e.g.
+    # "http://localhost:5173,https://oralhealthproviders.org"
+    # Empty string = CORS middleware not added (Vite proxy handles dev).
+    cors_origins: str = Field(default="")
+
+    # Only needed for `python -m app.seed` to create admin user.
+    # Not required at app startup — defaults to None.
+    admin_password: str | None = Field(default=None)
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 
