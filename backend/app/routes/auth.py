@@ -95,8 +95,8 @@ async def _get_provider_id(db: AsyncSession, user: User) -> str | None:
     """Return the provider UUID as a string, or None if not a provider."""
     if user.role != UserRole.PROVIDER:
         return None
-    result = await db.exec(select(Provider.id).where(Provider.user_id == user.id))
-    pid = result.first()
+    result = await db.execute(select(Provider.id).where(Provider.user_id == user.id))
+    pid = result.scalars().first()
     return str(pid) if pid else None
 
 
@@ -115,7 +115,7 @@ async def register(
     CSRF token are created here as part of the auto-login.
     """
     try:
-        user, provider = await auth_service.register_user(
+        user, provider = await auth_service.register_provider(
             db=db,
             email=body.email,
             password=body.password,
@@ -123,9 +123,11 @@ async def register(
             provider_type=body.provider_type,
         )
     except ValueError as e:
+        # 422=validation error (short password)
         # 409="Conflict" (usually because "that email is already registered")
-        # FE can catch a 409 and show "an account with this email already exists"
-        raise HTTPException(status_code=409, detail=str(e))
+        # FE can catch and show "an account with this email already exists" or "Password must be at least 8 characters"
+        status = 409 if "already registered" in str(e) else 422
+        raise HTTPException(status_code=status, detail=str(e))
 
     session = await session_service.create_session(db, user.id)
     await db.commit()

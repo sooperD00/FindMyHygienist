@@ -51,6 +51,15 @@ class TestArgon2:
         h2 = hash_password("same-password")
         assert h1 != h2
 
+class TestPasswordValidation:
+    def test_short_password_rejected(self):
+        from app.services.auth_service import validate_password
+        with pytest.raises(ValueError, match="at least 8 characters"):
+            validate_password("short")
+
+    def test_minimum_length_accepted(self):
+        from app.services.auth_service import validate_password
+        validate_password("12345678")  # no exception = pass
 
 # ── Session token format ──────────────────────────────────────────
 

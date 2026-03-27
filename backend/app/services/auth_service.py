@@ -42,13 +42,20 @@ def verify_password(password: str, hash: str) -> bool:
         return False
 
 
+# length is the single biggest factor in password strength per NIST guidelines.
+# TODO: Fancier password rules (uppercase, numbers, etc.)
+def validate_password(password: str) -> None:
+    """Raise ValueError if password doesn't meet minimum requirements."""
+    if len(password) < 8:
+        raise ValueError("Password must be at least 8 characters")
+
 # ── User lookups ──────────────────────────────────────────────────
 
 
 async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
     """Case-insensitive email lookup."""
-    result = await db.exec(select(User).where(User.email == email.lower()))
-    return result.first()
+    result = await db.execute(select(User).where(User.email == email.lower()))
+    return result.scalars().first()
 
 
 # ── Registration ──────────────────────────────────────────────────
@@ -73,6 +80,8 @@ async def register_provider(
     Returns (user, provider). Caller commits.
     Raises ValueError if email already taken.
     """
+    validate_password(password)
+
     existing = await get_user_by_email(db, email)
     if existing:
         raise ValueError("Email already registered")
