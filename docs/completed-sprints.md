@@ -20,7 +20,7 @@
 - [x] `POST /api/auth/register` — create User (role=PROVIDER) + Provider (status=PENDING) in one transaction, auto-login (create session + set cookie)
 - [x] `POST /api/auth/login` — verify argon2id hash, create session, set HTTP-only secure cookie
 - [x] `POST /api/auth/logout` — delete session row, clear cookie
-- [x] `GET /api/auth/me` — return current User (id, email, role) + linked Provider id
+- [x] `GET /api/auth/me` — return current User (id, email, role) ~~+ linked Provider id~~ (revised in Sprint 3 — provider_id removed from /me response; belongs in /api/me/profile instead)
 - [x] Auth middleware: protect `/api/me/*` and `/api/admin/*` routes
 - [x] Admin check: `User.role == ADMIN` (ADR-009)
 - [x] Create Nicole's admin User record (seed or CLI command)

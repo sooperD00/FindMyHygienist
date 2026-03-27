@@ -225,7 +225,7 @@ Seed data (17 entries):
 | `POST` | `/api/auth/register` | Provider signup — creates User (role=PROVIDER) + Provider (status=PENDING) in one transaction |
 | `POST` | `/api/auth/login` | Verify credentials, create session, set HTTP-only cookie |
 | `POST` | `/api/auth/logout` | Invalidate session |
-| `GET` | `/api/auth/me` | Current User info (id, email, role) + linked Provider id if role=PROVIDER |
+| `GET` | `/api/auth/me` | Current User info (id, email, role)|
 
 ### Provider (authenticated, own profile)
 

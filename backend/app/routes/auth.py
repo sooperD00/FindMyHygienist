@@ -51,7 +51,6 @@ class UserResponse(BaseModel):
 
 class MeResponse(BaseModel):
     user: UserResponse
-    provider_id: str | None = None
 
 
 # ── Cookie helpers ────────────────────────────────────────────────
@@ -86,18 +85,6 @@ def _set_session_cookies(response: Response, session) -> None:
 def _clear_session_cookies(response: Response) -> None:
     response.delete_cookie("session_id", path="/")
     response.delete_cookie("csrf_token", path="/")
-
-
-# ── Helper: look up provider_id for a user ────────────────────────
-
-
-async def _get_provider_id(db: AsyncSession, user: User) -> str | None:
-    """Return the provider UUID as a string, or None if not a provider."""
-    if user.role != UserRole.PROVIDER:
-        return None
-    result = await db.execute(select(Provider.id).where(Provider.user_id == user.id))
-    pid = result.scalars().first()
-    return str(pid) if pid else None
 
 
 # ── Endpoints ─────────────────────────────────────────────────────
@@ -138,7 +125,6 @@ async def register(
         user=UserResponse(
             id=str(user.id), email=user.email, role=user.role.value
         ),
-        provider_id=str(provider.id),
     )
 
 
@@ -161,13 +147,10 @@ async def login(
 
     _set_session_cookies(response, session)
 
-    provider_id = await _get_provider_id(db, user)
-
     return MeResponse(
         user=UserResponse(
             id=str(user.id), email=user.email, role=user.role.value
         ),
-        provider_id=provider_id,
     )
 
 
@@ -195,17 +178,13 @@ async def logout(
 @router.get("/me", response_model=MeResponse)
 async def me(
     user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_session),
 ):
     """Return current user info + linked provider ID.
 
     GET — no CSRF check needed (safe method).
     """
-    provider_id = await _get_provider_id(db, user)
-
     return MeResponse(
         user=UserResponse(
             id=str(user.id), email=user.email, role=user.role.value
         ),
-        provider_id=provider_id,
     )
