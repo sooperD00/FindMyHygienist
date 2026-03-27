@@ -58,25 +58,34 @@ ohp-app/
 │   ├── requirements.txt                # - [x] Sprint 0: pip dependencies
 │   ├── requirements-dev.txt            # - [x] Sprint 1: dev dependencies (pytest)
 │   ├── migrations/
-│   │   └── env.py                      # - [x] Sprint 0: async Alembic setup
+│   │   ├── env.py                      # - [x] Sprint 0: async Alembic setup
+│   │   └── versions/
+│   │       ├── 1b74b34a_initial_schema_6_tables.py   # - [x] Sprint 1
+│   │       └── f9bd8a66_add_sessions_table.py        # - [x] Sprint 2
 │   ├── app/
 │   │   ├── __init__.py
-│   │   ├── main.py                     # - [x] Sprint 0: FastAPI app instance, health check, router includes
-│   │   ├── config.py                   # - [x] Sprint 0: Pydantic settings, reads .env
+│   │   ├── main.py                     # - [x] Sprint 0/2: FastAPI app, health check, CORS middleware, auth router
+│   │   ├── config.py                   # - [x] Sprint 0/2: Pydantic settings (DB, secret_key, session lifetime, CORS, debug)
 │   │   ├── database.py                 # - [x] Sprint 0: Async engine + session setup
+│   │   ├── dependencies.py            # - [x] Sprint 2: get_current_user, csrf_protect, require_admin (Depends chain)
+│   │   ├── seed.py                    # - [x] Sprint 2: CLI script to create admin User
 │   │   ├── models/
 │   │   │   ├── __init__.py             # - [x] Sprint 0: scaffold
 │   │   │   ├── enums.py                # - [x] Sprint 1: UserRole, CredentialType, ProviderType, ProviderStatus, Availability, FeedbackType
 │   │   │   ├── user.py                 # - [x] Sprint 1: User (auth identity for everyone)
 │   │   │   ├── credential.py           # - [x] Sprint 1: Credential (reference table, seeded from credentials.json)
 │   │   │   ├── provider.py             # - [x] Sprint 1: Provider, ProviderCredential, ProviderLocation
-│   │   │   └── feedback.py             # - [x] Sprint 1: Feedback
+│   │   │   ├── feedback.py             # - [x] Sprint 1: Feedback
+│   │   │   └── session.py             # - [x] Sprint 2: Server-side session (id, user_id, csrf_token, expires_at)
 │   │   ├── data/
 │   │   │   └── credentials.json        # - [x] Sprint 1: 17 Oregon credential seed entries
 │   │   ├── routes/
-│   │   │   └── __init__.py             # - [x] Sprint 0: scaffold
+│   │   │   ├── __init__.py             # - [x] Sprint 0: scaffold
+│   │   │   └── auth.py                # - [x] Sprint 2: register, login, logout, me
 │   │   └── services/
-│   │       └── __init__.py             # - [x] Sprint 0: scaffold
+│   │       ├── __init__.py             # - [x] Sprint 0: scaffold
+│   │       ├── auth_service.py        # - [x] Sprint 2: argon2id hashing, register_provider, authenticate_user, slug generation
+│   │       └── session_service.py     # - [x] Sprint 2: create/get/delete session (~50 lines)
 │   └── tests/                          # - [x] PyTests: 43/43 pass
 │       ├── __init__.py
 │       ├── test_models.py              # - [x] Sprint 1: 25 tests: enum completeness, credentials.json integrity, model defaults

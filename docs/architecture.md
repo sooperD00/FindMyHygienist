@@ -201,7 +201,7 @@ Seed data (17 entries):
 
 **Private (never exposed via public API):** User.email (login credential), User.password_hash, Provider.draft, admin review metadata (reviewed_by, reviewed_at), User.role.
 
-**What to hash/encrypt:** Only `password_hash` (argon2id, handled by the auth library). Everything else is either intentionally public or simply access-controlled at the API layer (not returned in public endpoints). No field-level encryption needed — the provider is choosing to publish their info. Standard DB-level encryption at rest (Railway Postgres provides this) is sufficient.
+**What to hash/encrypt:** Only `password_hash` (argon2id, handled by argon2-cffi — see ADR-011). Everything else is either intentionally public or simply access-controlled at the API layer (not returned in public endpoints). No field-level encryption needed — the provider is choosing to publish their info. Standard DB-level encryption at rest (Railway Postgres provides this) is sufficient.
 
 ---
 
@@ -223,7 +223,7 @@ Seed data (17 entries):
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/api/auth/register` | Provider signup — creates User (role=PROVIDER) + Provider (status=PENDING) in one transaction |
-| `POST` | `/api/auth/login` | Returns session token or JWT |
+| `POST` | `/api/auth/login` | Verify credentials, create session, set HTTP-only cookie |
 | `POST` | `/api/auth/logout` | Invalidate session |
 | `GET` | `/api/auth/me` | Current User info (id, email, role) + linked Provider id if role=PROVIDER |
 
