@@ -25,6 +25,7 @@
 - [x] Admin check: `User.role == ADMIN` (ADR-009)
 - [x] Create Nicole's admin User record (seed or CLI command)
 - [x] CORS middleware on FastAPI (Vite proxy covers dev, but prod needs it — do it now so it doesn't bite us in Sprint 7)
+- [x] `AUTO_APPROVE` env var support for conference mode (pulled forward from Sprint 8 — register_provider reads settings.auto_approve to set status + auto_approved flag)
 
 ---
 
