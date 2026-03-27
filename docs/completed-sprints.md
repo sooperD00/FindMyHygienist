@@ -4,6 +4,27 @@
      Include the actual date range, any deviations from plan, and
      links to relevant commits or PRs. Latest sprints are at the top. -->
 
+---
+
+
+## Sprint 2 — Auth & Registration — Backend (Days 3-8) - DONE 3/26/2026 9:52p
+
+**Goal:** A provider can register, log in, and exist in the database with a status. Backend fully testable via Swagger / curl before frontend work begins.
+
+- [x] Finalize auth approach (ADR-006) — session-based with server-side Postgres sessions
+- [x] `sessions` table migration (id, user_id, created_at, expires_at) + model
+- [x] Session service: create_session, get_session, delete_session (~50–60 lines)
+- [x] Auth dependency: read session cookie → look up session → load User (replaces FastAPI's `OAuth2PasswordBearer` pattern)
+- [x] CSRF middleware: synchronizer token pattern for state-changing requests (POST/PUT/DELETE) -> changed to use FastAPI Depends() dependency injection so the DB hit is only 1x, but same result and added OpenAPI perk (lock icon showing up on protected routes in Swagger).
+- [x] add len(password) >= 8 requirement per NIST guidelines to code and fancier password rules ambitions to housekeeping, plus a pytest for this (+2)
+- [x] `POST /api/auth/register` — create User (role=PROVIDER) + Provider (status=PENDING) in one transaction, auto-login (create session + set cookie)
+- [x] `POST /api/auth/login` — verify argon2id hash, create session, set HTTP-only secure cookie
+- [x] `POST /api/auth/logout` — delete session row, clear cookie
+- [x] `GET /api/auth/me` — return current User (id, email, role) + linked Provider id
+- [x] Auth middleware: protect `/api/me/*` and `/api/admin/*` routes
+- [x] Admin check: `User.role == ADMIN` (ADR-009)
+- [x] Create Nicole's admin User record (seed or CLI command)
+- [x] CORS middleware on FastAPI (Vite proxy covers dev, but prod needs it — do it now so it doesn't bite us in Sprint 7)
 
 ---
 

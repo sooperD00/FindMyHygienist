@@ -14,7 +14,7 @@ This is an Oregon-specific project in partnership with the [Oregon Dental Hygien
 | Frontend | React, TypeScript, Vite |
 | Database | PostgreSQL (Railway) |
 | Image Storage | S3-compatible object storage (DO Spaces or Cloudflare R2) |
-| Auth | TBD — session-based or JWT, decided in Sprint 2 |
+| Auth | Session-based with server-side Postgres sessions (ADR-006) |
 | Deployment | Railway and/or DigitalOcean App Platform |
 
 Monorepo: `frontend/` and `backend/` at the root.
@@ -77,9 +77,10 @@ ohp-app/
 │   │   │   └── __init__.py             # - [x] Sprint 0: scaffold
 │   │   └── services/
 │   │       └── __init__.py             # - [x] Sprint 0: scaffold
-│   └── tests/                          # - [x] PyTests: 25/25 pass
+│   └── tests/                          # - [x] PyTests: 43/43 pass
 │       ├── __init__.py
-│       └──test_models.py               # - [x] Sprint 1: 25 tests: enum completeness, credentials.json integrity, model defaults
+│       ├── test_models.py              # - [x] Sprint 1: 25 tests: enum completeness, credentials.json integrity, model defaults
+│       └── test_auth.py                # - [x] Sprint 2: 18 tests: argon2id roundtrip, pw len, token format, CSRF compare_digest, slug generation, Session model fields. No DB needed.
 └── frontend/
     ├── .gitignore                      # - [x] Sprint 0: Vite/Node defaults
     ├── index.html                      # - [x] Sprint 0: Vite entry point
