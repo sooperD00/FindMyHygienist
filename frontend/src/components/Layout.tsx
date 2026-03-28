@@ -1,20 +1,64 @@
-import { Link, Outlet } from "react-router-dom";
+/**
+ * Shared layout — nav bar + footer, wraps all pages via <Outlet>.
+ *
+ * Nav updates based on auth state:
+ *   - Logged out: "List With Us" + "Log In"
+ *   - Logged in (provider): "Dashboard" + "Log Out"
+ *   - Logged in (admin): "Dashboard" + "Admin" + "Log Out"
+ *
+ * The logout button is a <button>, not a <Link> — it triggers a
+ * POST to /api/auth/logout (state-changing, needs CSRF). After
+ * logout, navigate to home.
+ */
+
+import { Link, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 function Layout() {
+  const { user, isLoading, logout } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    await logout();
+    navigate("/");
+  }
+
   return (
     <div>
       <nav>
-        <Link to="/">OHP</Link>
+        <Link to="/">OralHealthProviders</Link>
         <Link to="/providers/or/portland">Find a Provider</Link>
         <Link to="/about">About</Link>
-        <Link to="/join">List With Us</Link>
-        <Link to="/login">Log In</Link>
+
+        {/* Auth-dependent nav items — hidden while loading to avoid
+            flash of wrong links */}
+        {!isLoading && (
+          <>
+            {user ? (
+              <>
+                <Link to="/dashboard">Dashboard</Link>
+                {user.role === "ADMIN" && <Link to="/admin">Admin</Link>}
+                <button onClick={handleLogout} className="nav-button">
+                  Log Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/join">List With Us</Link>
+                <Link to="/login">Log In</Link>
+              </>
+            )}
+          </>
+        )}
       </nav>
       <main>
         <Outlet />
       </main>
       <footer>
-        <p>© 2026 Oral Health Providers · <Link to="/about">About</Link> · <a href="mailto:nicole@oralhealthproviders.org">Give Us Feedback</a></p>
+        <p>
+          © 2026 Oral Health Providers · <Link to="/about">About</Link> ·{" "}
+          <a href="mailto:nicole.rowsey@gmail.com">Give Us Feedback</a>
+        </p>
       </footer>
     </div>
   );

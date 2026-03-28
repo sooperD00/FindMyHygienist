@@ -1,15 +1,15 @@
 /*---------------
- Top-level routing table
- Map every URL in your app to the component that should render for it
- and wrap them all in a shared Layout (the nav bar and footer)
- 
- React renders this first, and everything else flows from it
+ Top-level routing table + AuthProvider wrapper.
 
- Mostly this is plain JavaScript; TypeScript is opt-in strictness
- Wait for the data models and interfaces and components :)
+ Sprint 3: added AuthProvider, ProtectedRoute, AdminRoute.
+ The AuthProvider wraps everything inside <BrowserRouter> so the
+ auth context is available to Layout, pages, and route guards.
  ---------------*/
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
 import Home from "./pages/Home";
 import Search from "./pages/Search";
 import Profile from "./pages/Profile";
@@ -23,19 +23,35 @@ import NotFound from "./pages/NotFound";
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/providers/or/:city" element={<Search />} />
-          <Route path="/providers/:slug/:id" element={<Profile />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/join" element={<Join />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/providers/or/:city" element={<Search />} />
+            <Route path="/providers/:slug/:id" element={<Profile />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/join" element={<Join />} />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <Admin />
+                </AdminRoute>
+              }
+            />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

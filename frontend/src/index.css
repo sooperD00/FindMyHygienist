@@ -109,3 +109,90 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* ── Sprint 3: auth forms & layout helpers ─────────────────────── */
+
+.page-narrow {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 24px;
+  text-align: left;
+}
+
+.page-narrow h1 {
+  font-size: 32px;
+  text-align: left;
+}
+
+/* Form elements — functional, not fancy. Sprint 10 is the polish pass. */
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 24px 0;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-h);
+  margin-top: 12px;
+}
+
+input,
+select {
+  font: inherit;
+  font-size: 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid var(--accent-border);
+  outline-offset: 1px;
+}
+
+form small {
+  font-size: 13px;
+  color: var(--text);
+}
+
+form button[type="submit"] {
+  margin-top: 20px;
+  padding: 12px;
+  font: inherit;
+  font-weight: 500;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+form button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-error {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+/* Nav logout button — styled to match nav links */
+.nav-button {
+  font: inherit;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
