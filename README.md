@@ -116,12 +116,12 @@ ohp-app/
         │   ├── Search.tsx             # - [x] Sprint 0: stub
         │   ├── Profile.tsx            # - [x] Sprint 0: stub
         │   ├── About.tsx              # - [x] Sprint 0: stub
-        │   ├── Join.tsx               # - [x] Sprint 0: stub
-        │   ├── Login.tsx              # - [x] Sprint 0: stub
-        │   ├── Dashboard.tsx          # - [x] Sprint 0: stub
-        │   ├── Admin.tsx              # - [x] Sprint 0: stub
+        │   ├── Join.tsx               # - [x] Sprint 3: Join form with auth
+        │   ├── Login.tsx              # - [x] Sprint 3: Login form with auth
+        │   ├── Dashboard.tsx          # - [x] Sprint 3: stub with auth
+        │   ├── Admin.tsx              # - [x] Sprint 3: stub with auth
         │   └── NotFound.tsx           # - [x] Sprint 0: stub
-        └── __tests__/                 # - [ ] Vitest tests
+        └── __tests__/                 # - [ ] Vitest tests: 9/9 pass
 ```
 
 ## Docs

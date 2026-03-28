@@ -5,6 +5,7 @@ backend/tests/results*.txt
 __pycache__/
 .pytest_cache/
 *.pyc
+frontend/src/__tests__/results*.txt
 
 
 

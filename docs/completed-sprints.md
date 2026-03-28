@@ -6,6 +6,19 @@
 
 ---
 
+## Sprint 3 — Auth & Registration — Frontend (Day 9) - DONE 3/27/2026 9:31p
+
+**Goal:** Wire the frontend to the auth backend. Provider can register, log in, log out, and see protected pages.
+
+- [x] Removed provider_id from /api/auth/me response — auth layer shouldn't know about providers. Provider ID comes from /api/me/profile (Sprint 4).
+- [x] Auth context/hook: call `GET /api/auth/me` on app load, store user state, expose login/logout/register functions
+- [x] Frontend: Join page (registration form) — email, password, display_name, provider_type selector — calls `POST /api/auth/register`
+- [x] Frontend: Login page — calls `POST /api/auth/login`
+- [x] Frontend: include CSRF token on state-changing requests (POST/PUT/DELETE)
+- [x] Frontend: route guards for authenticated pages (Dashboard) and admin pages (Admin)
+- [x] Frontend: nav updates — show Login/Join when logged out, Dashboard/Logout when logged in, Admin link when role=ADMIN
+
+---
 
 ## Sprint 2 — Auth & Registration — Backend (Days 3-8) - DONE 3/26/2026 9:52p
 
