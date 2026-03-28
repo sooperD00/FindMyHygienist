@@ -2,6 +2,7 @@
 FastAPI app instance, router includes, middleware.
 
 Sprint 2: auth router + CORS middleware.
+Sprint 4: profile router (credentials, own profile, public profiles).
 CORS is configured now (even though Vite proxy handles dev) so it
 doesn't bite us in Sprint 7 when prod needs it. See remaining-sprints.md.
 """
@@ -14,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import init_db
 from app.routes.auth import router as auth_router
+from app.routes.profile import router as profile_router
 
 
 @asynccontextmanager
@@ -37,6 +39,7 @@ if settings.cors_origins:
 
 # ── Routers ───────────────────────────────────────────────────────
 app.include_router(auth_router)
+app.include_router(profile_router)
 
 
 @app.get("/api/health")
