@@ -64,7 +64,7 @@ ohp-app/
 │   │       └── f9bd8a66_add_sessions_table.py        # - [x] Sprint 2
 │   ├── app/
 │   │   ├── __init__.py
-│   │   ├── main.py                     # - [x] Sprint 0/2: FastAPI app, health check, CORS middleware, auth router
+│   │   ├── main.py                     # - [x] Sprint 0/2/4: FastAPI app, health check, CORS middleware, auth + profile routers
 │   │   ├── config.py                   # - [x] Sprint 0/2: Pydantic settings (DB, secret_key, session lifetime, CORS, debug)
 │   │   ├── database.py                 # - [x] Sprint 0: Async engine + session setup
 │   │   ├── dependencies.py            # - [x] Sprint 2: get_current_user, csrf_protect, require_admin (Depends chain)
@@ -81,10 +81,12 @@ ohp-app/
 │   │   │   └── credentials.json        # - [x] Sprint 1: 17 Oregon credential seed entries
 │   │   ├── routes/
 │   │   │   ├── __init__.py             # - [x] Sprint 0: scaffold
-│   │   │   └── auth.py                # - [x] Sprint 2: register, login, logout, me
+│   │   │   ├── auth.py                # - [x] Sprint 2: register, login, logout, me
+│   │   │   └── profile.py            # - [x] Sprint 4: credentials list, own profile CRUD, public profile
 │   │   └── services/
 │   │       ├── __init__.py             # - [x] Sprint 0: scaffold
 │   │       ├── auth_service.py        # - [x] Sprint 2: argon2id hashing, register_provider, authenticate_user, slug generation
+│   │       ├── profile_service.py    # - [x] Sprint 4: credential queries, provider lookup, profile updates, credential replacement
 │   │       └── session_service.py     # - [x] Sprint 2: create/get/delete session (~50 lines)
 │   └── tests/                          # - [x] PyTests: 72/72 pass
 │       ├── __init__.py

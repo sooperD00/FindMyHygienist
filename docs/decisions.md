@@ -133,7 +133,7 @@
 
 **Decision:** Ship Oregon-only. But keep `state` as a field on provider locations rather than hardcoding "OR" everywhere. URL structure uses `/providers/or/:city` (state in the path). Search defaults to Oregon but the data model doesn't prevent other states.
 
-**Rationale:** Zero extra work to keep the door open. The static geocoding table (ADR-004) is Oregon-only for now, but adding another state's cities/zips is just adding rows.
+**Rationale:** Zero extra work to keep the door open. The Nominatim geocoding approach (ADR-004, revised) already handles any US state — expanding beyond Oregon is a policy decision, not a technical one.
 
 ---
 
