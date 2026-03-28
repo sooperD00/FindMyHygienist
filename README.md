@@ -99,18 +99,23 @@ ohp-app/
     ├── tsconfig.app.json               # - [x] Sprint 0: app-level TS config
     ├── tsconfig.node.json              # - [x] Sprint 0: node-level TS config
     ├── eslint.config.js                # - [x] Sprint 0: ESLint flat config
+    ├── vitest.config.ts                # - [x] Sprint 3: Vitest config
     ├── public/                         # - [x] Sprint 0: static assets (Vite default)
     └── src/
         ├── main.tsx                    # - [x] Sprint 0: React DOM entry point
-        ├── App.tsx                     # - [x] Sprint 0: top-level routing table
+        ├── App.tsx                     # - [x] Sprint 0/3: routing table with AuthProvider, ProtectedRoute, AdminRoute
         ├── App.css                     # - [x] Sprint 0: app styles (Vite default, to be replaced)
         ├── index.css                   # - [x] Sprint 0: global styles (Vite default, to be replaced)
         ├── api/
-        │   └── client.ts              # - [x] Sprint 0: typed API client stub (health check wired)
+        │   └── client.ts              # - [x] Sprint 0/3: typed API client with CSRF token handling, auth endpoints
         ├── assets/
         │   └── hero.png               # - [x] Sprint 0: landing page hero image
+        ├── contexts/
+        │   └── AuthContext.tsx         # - [x] Sprint 3: auth state provider (login/register/logout + GET /me on mount)
         ├── components/
-        │   └── Layout.tsx             # - [x] Sprint 0: shell (nav + footer) with <Outlet />
+        │   ├── Layout.tsx             # - [x] Sprint 0/3: shell (nav + footer) with <Outlet />, auth-aware nav links
+        │   ├── ProtectedRoute.tsx     # - [x] Sprint 3: redirects to /login if not authenticated
+        │   └── AdminRoute.tsx         # - [x] Sprint 3: redirects to / if not role=ADMIN
         ├── pages/
         │   ├── Home.tsx               # - [x] Sprint 0: stub
         │   ├── Search.tsx             # - [x] Sprint 0: stub
@@ -121,7 +126,11 @@ ohp-app/
         │   ├── Dashboard.tsx          # - [x] Sprint 3: stub with auth
         │   ├── Admin.tsx              # - [x] Sprint 3: stub with auth
         │   └── NotFound.tsx           # - [x] Sprint 0: stub
-        └── __tests__/                 # - [ ] Vitest tests: 9/9 pass
+        ├── types/
+        │   └── auth.ts               # - [x] Sprint 3: UserResponse, MeResponse, RegisterRequest, LoginRequest, ProviderType
+        └── __tests__/                 # - [x] Vitest: 9/9 pass
+            ├── setup.ts               # - [x] Sprint 3: test setup (jsdom globals)
+            └── client.test.ts         # - [x] Sprint 3: 9 tests — apiFetch, CSRF, auth wrappers
 ```
 
 ## Docs

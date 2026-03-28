@@ -179,7 +179,7 @@ async def logout(
 async def me(
     user: User = Depends(get_current_user),
 ):
-    """Return current user info + linked provider ID.
+    """Return current user info (id, email, role).
 
     GET — no CSRF check needed (safe method).
     """
