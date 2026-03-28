@@ -6,6 +6,22 @@
 
 ---
 
+## Sprint 4 — Profile API (Day 10) - DONE 3/28/2026 12:57p
+
+**Goal:** Profile data flows through the API — read, write, and serve a complete provider profile with credentials.
+
+- [x] `GET /api/credentials` — public list of all valid credential codes (powers intake form checkboxes + tappable chips)
+- [x] `GET /api/me/profile` — own profile including draft and credentials
+- [x] `PUT /api/me/profile` — update own profile fields (bio, services, specialties, populations_served, insurance_accepted, tags, languages, contact prefs, max_travel_miles, etc.)
+- [x] `PUT /api/me/credentials` — set credential codes (replaces full list via ProviderCredential join table)
+- [x] `GET /api/providers/{slug}/{id}` — public profile endpoint (approved only), includes credentials with patient_description
+
+<!-- All reading/writing columns on existing tables. One coherent unit:
+     Pydantic schemas for the 25-field Provider model, credential join
+     table operations, and the public-facing profile endpoint. -->
+
+---
+
 ## Sprint 3 — Auth & Registration — Frontend (Day 9) - DONE 3/27/2026 9:31p
 
 **Goal:** Wire the frontend to the auth backend. Provider can register, log in, log out, and see protected pages.

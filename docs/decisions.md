@@ -179,3 +179,150 @@
 **Rationale:** argon2id has been the OWASP recommendation since 2019. The key advantage is memory-hardness — bcrypt only costs CPU time per hash attempt, so attackers with GPU farms can parallelize cracking cheaply. argon2id forces each attempt to allocate a configurable amount of RAM, making GPU-parallel attacks dramatically more expensive. The Python API (`argon2-cffi`) is actually simpler than bcrypt's: `PasswordHasher().hash()` and `.verify()`, no manual salt handling. Since no auth routes exist yet and no hashes are stored, there is nothing to migrate. The switch is free now and gets more expensive every sprint.
 
 **Alternatives considered:** bcrypt — battle-tested and fine for most apps, but weaker against modern GPU attacks. No reason to choose it when starting from zero with a better option available.
+
+---
+
+## ADR-012: Separate draft review lifecycle from directory visibility status
+
+**Date:** 2026-03-28
+**Status:** Proposed (implementation deferred to Sprint 9)
+
+**Context:** The original data model uses a single `Provider.status` enum (PENDING, APPROVED, CHANGES_REQUESTED, SUSPENDED) for two unrelated concerns:
+
+1. **Directory visibility** — is this provider's profile live on the public site?
+2. **Draft review state** — whose turn is it to act on a pending profile edit?
+
+This conflation creates a broken flow for already-approved providers. When an APPROVED provider submits a profile edit (which lands in the `draft` JSON column per ADR-003), and Nicole rejects the draft, the options are all wrong:
+
+- Set status to CHANGES_REQUESTED → the provider **disappears from the directory**. Wildly disproportionate for "your updated bio has a typo."
+- Set status to SUSPENDED → even worse.
+- Leave status as APPROVED and... hope? → No mechanism to tell the provider their draft was rejected, no signal for Nicole's queue when the provider resubmits.
+
+The conference flow (AUTO_APPROVE=true) masks this because Nicole handles problems via direct email, not through the app. But post-conference, when the review queue is the primary workflow, this gap becomes a daily pain point.
+
+A related observation: **account suspension and profile visibility are also separate concerns.** A provider whose listing is suspended should still be able to log in and see "your listing is suspended" with an explanation. A provider whose *account* is locked (repeated abuse, unresponsive after warnings) shouldn't be able to log in at all. The current model has `User.is_active` (bool) and `Provider.status = SUSPENDED` but doesn't cleanly articulate the escalation path.
+
+**Decision:** Three independent axes, three independent fields:
+
+### 1. `Provider.status` — directory visibility (existing field, narrower scope)
+
+Controls whether the profile appears in public search results and the public profile endpoint. Values:
+
+| Value | Meaning | Visible to patients? |
+|-------|---------|---------------------|
+| `PENDING` | New signup, never reviewed | No |
+| `APPROVED` | Live on the directory | Yes |
+| `SUSPENDED` | Pulled from directory by admin | No |
+
+**Removed:** `CHANGES_REQUESTED` moves out of this enum — it was never about visibility, it was about draft review state. For *pre-approval* first reviews, PENDING already covers "not yet approved." If Nicole wants the provider to fix something before first approval, she sets a message (see admin_message below) and status stays PENDING. The provider edits their live fields (nothing is live yet), and re-enters the queue as PENDING.
+
+<!-- Wait — this means we need a signal for "I looked at this PENDING
+     provider and they need to fix something, don't show them to me
+     again until they've edited." That's the same turn-tracking problem
+     as drafts. See draft_status discussion below — same solution
+     applies: PENDING + draft_status = CHANGES_REQUESTED means Nicole
+     reviewed it and kicked it back. PENDING + draft_status = null or
+     REVIEW_NEEDED means it's Nicole's turn to look. -->
+
+### 2. `Provider.draft_status` — whose turn is it? (new field)
+
+Nullable enum on Provider. Null when there's no pending review action. Values:
+
+| Value | Meaning | Whose turn? |
+|-------|---------|-------------|
+| `null` | No pending review | Nobody |
+| `REVIEW_NEEDED` | Provider submitted something for review | Nicole's turn |
+| `CHANGES_REQUESTED` | Nicole reviewed and kicked it back | Provider's turn |
+
+The lifecycle for **post-approval edits** (APPROVED providers):
+
+```
+Provider edits profile
+  → draft populated, draft_status = REVIEW_NEEDED
+  → appears in Nicole's admin queue
+
+Nicole reviews draft:
+  Option A: Approve
+    → draft fields merged into live profile
+    → draft = null, draft_status = null
+  Option B: Request changes
+    → draft_status = CHANGES_REQUESTED
+    → admin_message set with explanation
+    → provider sees message, edits draft
+    → draft_status flips back to REVIEW_NEEDED
+    → back in Nicole's queue
+```
+
+The lifecycle for **first-time approval** (PENDING providers):
+
+```
+Provider registers
+  → status = PENDING, draft_status = REVIEW_NEEDED
+  → appears in Nicole's admin queue
+
+Nicole reviews:
+  Option A: Approve
+    → status = APPROVED, draft_status = null
+  Option B: Request changes
+    → status stays PENDING, draft_status = CHANGES_REQUESTED
+    → admin_message set with explanation
+    → provider edits live fields (nothing is live yet)
+    → draft_status flips back to REVIEW_NEEDED
+    → back in Nicole's queue
+```
+
+**Nicole's complete admin queue query:**
+
+```sql
+SELECT * FROM providers
+WHERE draft_status = 'REVIEW_NEEDED'
+ORDER BY updated_at ASC;
+```
+
+One query. No date math. No conditional logic. `REVIEW_NEEDED` means "Nicole hasn't looked at this yet" regardless of whether it's a new signup or an edit to an existing profile.
+
+### 3. `User.is_active` — account lockout (existing field, unchanged)
+
+Bool on User. False = can't log in. This is the nuclear option for accounts that need to be fully locked out (unresponsive after warnings, abuse, etc.).
+
+**Escalation path:**
+
+1. Nicole emails the provider directly (outside the app) — informal, conference-appropriate
+2. `Provider.status = SUSPENDED` — profile hidden from directory, provider can still log in and see "your listing is suspended" + admin_message
+3. `User.is_active = False` — full account lockout, can't log in at all
+
+### 4. `Provider.admin_message` — communication channel (new field)
+
+Text column, nullable. Set by admin when requesting changes or suspending. Cleared when the provider resubmits or when admin approves. The provider dashboard shows this message — "Nicole says: please remove the phone number from your bio, it belongs in the contact section."
+
+<!-- This was already flagged in remaining-sprints.md Sprint 9 comment:
+     "Provider has no field for that message yet. Decide here: either add
+     an admin_message text column on Provider (simplest), or stash it
+     in the draft JSON blob." Decision: dedicated column. The message
+     is about the provider's relationship with admin, not about any
+     specific set of field edits. It survives draft approval/rejection
+     cycles. -->
+
+**Rationale:**
+
+- **No date inference.** The original plan required comparing draft timestamps against admin action timestamps to determine whose turn it was and whether to re-notify. That's fragile, hard to query, and creates edge cases around timezone handling and "what if the provider saves without changing anything?" A dedicated status field is unambiguous.
+- **Queue query is trivial.** One WHERE clause, not a conditional expression. This matters because the admin queue is the most-used admin page.
+- **Backwards-compatible.** `draft_status` is nullable — null means no review pending. Existing providers (from conference) have no draft and no draft_status, which is correct. The new field only activates when the review workflow is actually used.
+- **CHANGES_REQUESTED moves to the right place.** It was never a visibility state. It's a turn-tracking state. Putting it on `draft_status` instead of `status` means an APPROVED provider asking for a bio tweak stays live on the directory the entire time.
+
+**Migration plan (Sprint 9):**
+
+1. Add `draft_status` column (VARCHAR, nullable) to providers table
+2. Add `admin_message` column (TEXT, nullable) to providers table
+3. Remove `CHANGES_REQUESTED` from `ProviderStatus` enum in Postgres
+   - If any existing rows have status = CHANGES_REQUESTED, migrate them to PENDING + draft_status = CHANGES_REQUESTED first
+   - Alembic: ALTER TYPE providerstatus RENAME VALUE... (Postgres doesn't support DROP VALUE from enums cleanly — may need to recreate the type. Cross that bridge in Sprint 9.)
+4. Set `draft_status = REVIEW_NEEDED` on any existing rows where `status = PENDING` (conference signups that Nicole hasn't reviewed yet)
+5. Update profile_service.py: `update_provider_profile` sets `draft_status = REVIEW_NEEDED` when writing to draft
+6. Build admin endpoints that consume draft_status
+
+**Alternatives considered:**
+
+- **Separate `provider_reviews` table with full audit log:** Every review action (approve, request changes, resubmit) gets a timestamped row. More data, full history, supports "show me the review conversation." But overkill for one admin reviewing tens of providers. The admin_message + draft_status fields handle the 99% case. If audit history ever matters, it can be added without changing the status/draft_status model — just log the transitions. — maybe post-launch
+- **Boolean `draft_needs_review` instead of an enum:** Simpler, but can't distinguish "provider submitted, Nicole hasn't looked" from "Nicole looked and kicked it back." The provider needs to know whether they're waiting on Nicole or Nicole is waiting on them. Two-value enum is the minimum viable model.
+- **Reuse the draft JSON blob for admin messages:** Stash `{"_admin_message": "fix your bio"}` inside the draft. Avoids a new column but conflates content (the edits) with metadata (the review conversation). The message should survive draft approval — "I approved your changes, but heads up for next time..." — which doesn't make sense inside a blob that gets set to null on approval.

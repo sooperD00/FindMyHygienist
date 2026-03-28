@@ -86,10 +86,11 @@ ohp-app/
 │   │       ├── __init__.py             # - [x] Sprint 0: scaffold
 │   │       ├── auth_service.py        # - [x] Sprint 2: argon2id hashing, register_provider, authenticate_user, slug generation
 │   │       └── session_service.py     # - [x] Sprint 2: create/get/delete session (~50 lines)
-│   └── tests/                          # - [x] PyTests: 43/43 pass
+│   └── tests/                          # - [x] PyTests: 72/72 pass
 │       ├── __init__.py
 │       ├── test_models.py              # - [x] Sprint 1: 25 tests: enum completeness, credentials.json integrity, model defaults
-│       └── test_auth.py                # - [x] Sprint 2: 18 tests: argon2id roundtrip, pw len, token format, CSRF compare_digest, slug generation, Session model fields. No DB needed.
+│       ├── test_auth.py                # - [x] Sprint 2: 18 tests (no DB): argon2id roundtrip, pw len, token format, CSRF compare_digest, slug generation, Session model fields. No DB needed.
+│       └── test_profile.py             # - [x] Sprint 4: 29 tests (no DB): schema validation, EDITABLE_FIELDS whitelist, response field presence (OwnProfile has draft+status, PublicProfile omits them), enum serialization sanity
 └── frontend/
     ├── .gitignore                      # - [x] Sprint 0: Vite/Node defaults
     ├── index.html                      # - [x] Sprint 0: Vite entry point
