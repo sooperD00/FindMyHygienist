@@ -167,7 +167,10 @@ async def update_provider_profile(
             k: (v.value if hasattr(v, "value") else v)
             for k, v in safe_updates.items()
         }
-        existing_draft = provider.draft or {}
+        # Avoid classic SQLAlchemy JSON mutation detection bug!!!
+        # careful *not* to mutate the dict in place and assign same object back
+        # so copy the dict so it's a new object (SQLAlchemy tracks changes by object identity, not by deep comparison)
+        existing_draft = dict(provider.draft) if provider.draft else {}
         existing_draft.update(json_safe)
         provider.draft = existing_draft
         # TODO (Sprint 9 / ADR-012): set provider.draft_status = DraftStatus.REVIEW_NEEDED here

@@ -332,6 +332,7 @@ async def update_own_profile(
         raise HTTPException(status_code=400, detail=str(e))
 
     await db.commit()
+    await db.refresh(provider)  # prevent SQLAlchemy lazy loading, reload the row from Postgres
 
     credentials = await profile_service.get_provider_credentials(
         db, provider.id
@@ -369,5 +370,6 @@ async def update_own_credentials(
         raise HTTPException(status_code=400, detail=str(e))
 
     await db.commit()
+    await db.refresh(provider)  # prevent SQLAlchemy lazy loading, reload the row from Postgres
 
     return [_credential_to_response(c) for c in credentials]

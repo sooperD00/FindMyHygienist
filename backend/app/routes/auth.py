@@ -10,6 +10,13 @@ Register and login create a session and set two cookies:
 
 The csrf_token cookie is NOT the source of truth — the session row in
 Postgres is. See ADR-006 and dependencies.py.
+
+Dependency chains:
+POST /api/auth/register            → get_session (no auth — session created here)
+POST /api/auth/login               → get_session (no auth — session created here)
+POST /api/auth/logout              → csrf_protect → get_current_user → get_session
+GET  /api/auth/me                  → get_current_user → get_session
+
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
