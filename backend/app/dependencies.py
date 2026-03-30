@@ -31,7 +31,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_session
 from app.models.enums import UserRole
 from app.models.user import User
-from app.services import session_service
+from app.services import session_service, profile_service
+from app.models.provider import Provider
 
 
 async def get_current_user(
@@ -90,3 +91,30 @@ async def require_admin(user: User = Depends(csrf_protect)) -> User:
     if user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
+
+
+async def _resolve_provider(user: User, db: AsyncSession) -> Provider:
+    """Shared logic for both provider dependencies."""
+    provider = await profile_service.get_provider_by_user_id(db, user.id)
+    if provider is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No provider profile linked to this account",
+        )
+    return provider
+
+
+async def get_current_provider(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
+) -> Provider:
+    """For GET endpoints — auth check, no CSRF."""
+    return await _resolve_provider(user, db)
+
+
+async def get_current_provider_csrf(
+    user: User = Depends(csrf_protect),
+    db: AsyncSession = Depends(get_session),
+) -> Provider:
+    """For POST/PUT/DELETE — auth + CSRF check."""
+    return await _resolve_provider(user, db)
