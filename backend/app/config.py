@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     # False in dev so localhost works without certs.
     debug: bool = Field(default=False)
 
+    # Local filesystem path for photo uploads in dev (Sprint 5).
+    # Ignored in prod — S3 backend uses bucket config instead (Sprint 12).
+    photo_upload_dir: str = Field(default="./uploads")
+
     # Comma-separated allowed origins for CORS, e.g.
     # "http://localhost:5173,https://oralhealthproviders.org"
     # Empty string = CORS middleware not added (Vite proxy handles dev).
