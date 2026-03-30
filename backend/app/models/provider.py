@@ -149,9 +149,10 @@ class ProviderLocation(SQLModel, table=True):
     practice_name: str | None = Field(default=None, max_length=200)
     address_line1: str | None = Field(default=None, max_length=300)
     address_line2: str | None = Field(default=None, max_length=100)
-    city: str = Field(index=True, max_length=100)
+    city: str | None = Field(default=None, index=True, max_length=100)  # nullable for zip-only private locations (ADR-013)
     state: str = Field(default="OR", max_length=2)  # don't hardcode — ADR-008
     zip_code: str | None = Field(default=None, index=True, max_length=10)
     latitude: float | None = Field(default=None)
     longitude: float | None = Field(default=None)
     is_primary: bool = Field(default=False)
+    is_public: bool = Field(default=True)  # ADR-013: False = search-only, invisible on public profile
