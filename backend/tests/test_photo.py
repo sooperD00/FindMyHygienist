@@ -144,12 +144,17 @@ class TestDetectImageType:
         with pytest.raises(ValueError, match="accepted image format"):
             detect_image_type(data)
 
+    # Short/empty bytes don't need a separate length guard — Python
+    # slicing handles them safely (b""[:3] == b"", which won't match
+    # any magic signature). They fall through to the same ValueError
+    # as any other unrecognized format. The important thing is they
+    # don't silently pass or crash.
     def test_empty_bytes_rejected(self):
-        with pytest.raises(ValueError, match="too small"):
+        with pytest.raises(ValueError, match="accepted image format"):
             detect_image_type(b"")
 
     def test_short_bytes_rejected(self):
-        with pytest.raises(ValueError, match="too small"):
+        with pytest.raises(ValueError, match="accepted image format"):
             detect_image_type(b"\xff\xd8")
 
 
