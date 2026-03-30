@@ -326,3 +326,58 @@ Text column, nullable. Set by admin when requesting changes or suspending. Clear
 - **Separate `provider_reviews` table with full audit log:** Every review action (approve, request changes, resubmit) gets a timestamped row. More data, full history, supports "show me the review conversation." But overkill for one admin reviewing tens of providers. The admin_message + draft_status fields handle the 99% case. If audit history ever matters, it can be added without changing the status/draft_status model — just log the transitions. — maybe post-launch
 - **Boolean `draft_needs_review` instead of an enum:** Simpler, but can't distinguish "provider submitted, Nicole hasn't looked" from "Nicole looked and kicked it back." The provider needs to know whether they're waiting on Nicole or Nicole is waiting on them. Two-value enum is the minimum viable model.
 - **Reuse the draft JSON blob for admin messages:** Stash `{"_admin_message": "fix your bio"}` inside the draft. Avoids a new column but conflates content (the edits) with metadata (the review conversation). The message should survive draft approval — "I approved your changes, but heads up for next time..." — which doesn't make sense inside a blob that gets set to null on approval.
+
+---
+
+## ADR-013: Location visibility — is_public flag and dual-purpose locations
+
+**Date:** 2026-03-30
+**Status:** Accepted
+
+**Context:** Provider locations serve two purposes that can conflict: **findability** (radius search needs a geocodable address) and **display** (patients see where the provider practices). EPDHs and other traveling providers need to appear in location-based searches but shouldn't expose their home address. Dentists searching for hygienists to hire also use radius search — so the privacy concern applies broadly, not just to patient-facing searches. Meanwhile, providers with public practice sites (offices, clinics, school programs) *want* those locations displayed on their profile. The original ProviderLocation model has no way to distinguish these cases.
+
+**Decision:** Add `is_public` boolean column on `provider_locations`, default `True`. This single flag separates the two concerns:
+
+- **Public locations** (`is_public=True`): Visible on the provider's public profile as label + city + state (never full address — see "What's exposed publicly" below). Also used for radius search.
+- **Private locations** (`is_public=False`): Invisible on the public profile entirely — no label, no city, nothing. Used only for radius search behind the scenes. The provider sees them on their own dashboard.
+
+**What's exposed publicly:** For `is_public=True` locations, the public API returns `label`, `city`, and `state` only. `address_line1`, `address_line2`, `zip_code`, `latitude`, and `longitude` are never sent through the public profile endpoint. This is enforced at the response schema level — `PublicLocationResponse` simply doesn't include those fields. If providers later ask for full addresses to be displayed (e.g., a dentist who wants patients to have their office address), that's a schema change, not a data model change. Easy to open up, impossible to accidentally leak.
+
+<!-- Zip-code-derived coverage lists (like Psychology Today's "serves
+     these zip codes" section) can be calculated from the provider's
+     locations + max_travel_miles at query time. No new data needed —
+     it's a display feature built on top of the existing model. Post-conference
+     if anyone asks for it. -->
+
+**Migration (Sprint 5):**
+
+1. Add `is_public` column (BOOLEAN, NOT NULL, DEFAULT TRUE) to `provider_locations`
+2. Make `city` nullable on `provider_locations` — zip-code-only private locations won't always have a city (geocoding in Sprint 7 can backfill it from the zip)
+
+**Rationale:**
+
+- **One table, one flag.** A public office and a private home base are the same shape of data — address, label, coordinates. Splitting them into separate tables doubles the CRUD, doubles the search query joins, and creates a "which table do I add this to?" UX decision that maps poorly to how providers think about their locations. A boolean on the existing table is the minimum viable distinction.
+- **Default public.** Most locations are practice sites that providers want displayed. The private case (traveling from home) is the exception that needs an explicit opt-out, not the default. This keeps the intake flow simple for the common case (dentist entering an office address) while still supporting the EPDH case.
+- **Search uses all locations regardless of is_public.** Sprint 7's search service queries `provider_locations` without filtering on `is_public` — a private home-base location still puts the provider in radius results. The flag only affects what appears on the public profile.
+- **No address exposure on public profiles yet.** Even for public locations, showing label + city + state is enough for MVP. Patients see "Community Health Center — Salem, OR" and contact the provider directly. Full address display is a future opt-in if providers request it. Starting restrictive and opening up is safer than the reverse.
+
+**Alternatives considered:**
+
+- **Separate `private_locations` table for travel bases:** Cleaner separation of concerns, but doubles CRUD and complicates Sprint 7's search query (UNION or two joins). The data shape is identical — a table split is organizational, not structural. The boolean achieves the same result with less code.
+- **No is_public flag — just never show locations publicly, rely on radius search only:** Simpler, but throws away the "Main Office — Portland, OR" display that builds trust on profiles. Providers with public practices want that visibility. The flag lets each provider decide per-location.
+- **Provider-level visibility toggle instead of per-location:** A single "show my locations" toggle on the Provider record. Simpler, but doesn't handle the mixed case (EPDH who travels from home AND works at a clinic). Per-location granularity is the right level.
+
+**Frontend guidance (Sprint 6 implementation):**
+
+The intake form should contextually guide providers toward appropriate location setup based on their situation. Two patterns:
+
+1. **Traveling/mobile providers (EPDH, mobile hygienists):** The form should lead with something like "Where do you travel from?" with helper text: *"This helps patients near you find you in search — it won't appear on your profile."* `is_public` pre-unchecked. Address fields relaxed — entering just a zip code is sufficient (geocoding backfills city/coordinates in Sprint 7). Label defaults to "Travel base" or similar, editable. Below this, an "Add a practice location" option for any public sites they also serve.
+
+2. **Fixed-location providers (dentists, clinic-based hygienists):** The form leads with the office address, `is_public` checked by default, guided label suggestions ("Main Office", "Community Health Center", "School-Based Program", plus freeform). The private/travel option is available via "Add another location" but not front-and-center.
+
+<!-- The provider_type enum drives which pattern the form presents first,
+     but any provider can add both public and private locations regardless
+     of type. A dentist might have a home office they don't want listed;
+     an EPDH might have a clinic they do. The form guides, not restricts. -->
+
+The `is_public` checkbox should use friendlier copy than "is_public" — something like **"Show on my profile"** with helper text that explains what happens in each state. When unchecked: *"This location is used for search only. Patients won't see it."* When checked: *"Patients will see this location's name and city on your profile."*
