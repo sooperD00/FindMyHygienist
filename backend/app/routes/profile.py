@@ -26,15 +26,21 @@ from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
-from app.dependencies import csrf_protect, get_current_user
+from app.dependencies import get_current_provider, get_current_provider_csrf
 from app.models.enums import (
     Availability,
     CredentialType,
     ProviderStatus,
     ProviderType,
 )
-from app.models.user import User
-from app.services import profile_service
+from app.models.provider import Provider
+from app.routes.locations import (
+    OwnLocationResponse,
+    PublicLocationResponse,
+    _location_to_own_response,
+    _location_to_public_response,
+)
+from app.services import location_service, profile_service
 
 router = APIRouter(tags=["profile"])
 
@@ -80,6 +86,7 @@ class OwnProfileResponse(BaseModel):
     draft: dict | None = None
     reviewed_at: str | None = None  # ISO string, not raw datetime (enforced by helper below)
     credentials: list[CredentialResponse]
+    locations: list[OwnLocationResponse] = []
     created_at: str | None = None
     updated_at: str | None = None
 
@@ -110,6 +117,7 @@ class PublicProfileResponse(BaseModel):
     accepts_texts: bool
     accepts_calls: bool
     credentials: list[CredentialResponse]
+    locations: list[PublicLocationResponse] = []
 
 
 # ── Request schemas ───────────────────────────────────────────────
@@ -173,7 +181,7 @@ def _credential_to_response(cred) -> CredentialResponse:
 
 
 def _provider_to_own_response(
-    provider, credentials: list
+    provider, credentials: list, locations: list
 ) -> OwnProfileResponse:
     return OwnProfileResponse(
         id=str(provider.id),
@@ -204,6 +212,7 @@ def _provider_to_own_response(
             provider.reviewed_at.isoformat() if provider.reviewed_at else None
         ),
         credentials=[_credential_to_response(c) for c in credentials],
+        locations=[_location_to_own_response(loc) for loc in locations],
         created_at=(
             provider.created_at.isoformat() if provider.created_at else None
         ),
@@ -214,7 +223,7 @@ def _provider_to_own_response(
 
 
 def _provider_to_public_response(
-    provider, credentials: list
+    provider, credentials: list, locations: list
 ) -> PublicProfileResponse:
     return PublicProfileResponse(
         id=str(provider.id),
@@ -240,6 +249,7 @@ def _provider_to_public_response(
         accepts_texts=provider.accepts_texts,
         accepts_calls=provider.accepts_calls,
         credentials=[_credential_to_response(c) for c in credentials],
+        locations=[_location_to_public_response(loc) for loc in locations],
     )
 
 
@@ -275,7 +285,8 @@ async def get_public_profile(
     credentials = await profile_service.get_provider_credentials(
         db, provider.id
     )
-    return _provider_to_public_response(provider, credentials)
+    locations = await location_service.get_public_locations(db, provider.id)
+    return _provider_to_public_response(provider, credentials, locations)
 
 
 # ── Authenticated endpoints (own profile) ─────────────────────────
@@ -283,27 +294,22 @@ async def get_public_profile(
 
 @router.get("/api/me/profile", response_model=OwnProfileResponse)
 async def get_own_profile(
-    user: User = Depends(get_current_user),
+    provider: Provider = Depends(get_current_provider),
     db: AsyncSession = Depends(get_session),
 ):
     """Provider's view of their own profile, including draft and credentials."""
-    provider = await profile_service.get_provider_by_user_id(db, user.id)
-    if provider is None:
-        raise HTTPException(
-            status_code=404,
-            detail="No provider profile linked to this account",
-        )
-
     credentials = await profile_service.get_provider_credentials(
         db, provider.id
     )
-    return _provider_to_own_response(provider, credentials)
+    locations = await location_service.get_provider_locations(db, provider.id)
+    return _provider_to_own_response(provider, credentials, locations)
 
 
-@router.put("/api/me/profile", response_model=OwnProfileResponse)
+# partial update is a PATCH
+@router.patch("/api/me/profile", response_model=OwnProfileResponse)
 async def update_own_profile(
     body: ProfileUpdateRequest,
-    user: User = Depends(csrf_protect),
+    provider: Provider = Depends(get_current_provider_csrf),
     db: AsyncSession = Depends(get_session),
 ):
     """Update own profile fields.
@@ -312,14 +318,7 @@ async def update_own_profile(
     (live profile stays untouched until admin approves). If PENDING
     or CHANGES_REQUESTED, changes go directly to live fields.
     """
-    provider = await profile_service.get_provider_by_user_id(db, user.id)
-    if provider is None:
-        raise HTTPException(
-            status_code=404,
-            detail="No provider profile linked to this account",
-        )
-
-    updates = body.model_dump(exclude_unset=True)
+    updates = body.model_dump(exclude_unset=True)  # # this is how the update patterns works; Fields the client didn't send are excluded, so they don't get overwritten to None; Pydantic equivalent of a SQL PATCH
     # Convert EmailStr back to plain str for storage
     if "public_email" in updates and updates["public_email"] is not None:
         updates["public_email"] = str(updates["public_email"])
@@ -337,7 +336,8 @@ async def update_own_profile(
     credentials = await profile_service.get_provider_credentials(
         db, provider.id
     )
-    return _provider_to_own_response(provider, credentials)
+    locations = await location_service.get_provider_locations(db, provider.id)
+    return _provider_to_own_response(provider, credentials, locations)
 
 
 @router.put(
@@ -346,7 +346,7 @@ async def update_own_profile(
 )
 async def update_own_credentials(
     body: CredentialUpdateRequest,
-    user: User = Depends(csrf_protect),
+    provider: Provider = Depends(get_current_provider_csrf),
     db: AsyncSession = Depends(get_session),
 ):
     """Replace this provider's credential list entirely.
@@ -355,13 +355,6 @@ async def update_own_credentials(
     existing and inserts new in one transaction. See atomicity
     discussion: if the insert fails, the delete rolls back.
     """
-    provider = await profile_service.get_provider_by_user_id(db, user.id)
-    if provider is None:
-        raise HTTPException(
-            status_code=404,
-            detail="No provider profile linked to this account",
-        )
-
     try:
         credentials = await profile_service.replace_provider_credentials(
             db, provider.id, body.codes
