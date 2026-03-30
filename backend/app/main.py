@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="OHP — Oral Health Providers", lifespan=lifespan)
+app = FastAPI(title="Oral Health Providers", lifespan=lifespan)
 
 # ── CORS ──────────────────────────────────────────────────────────
 # allow_credentials=True is required for cookie-based auth — without
