@@ -61,11 +61,12 @@ ohp-app/
 │   │   ├── env.py                      # - [x] Sprint 0: async Alembic setup
 │   │   └── versions/
 │   │       ├── 1b74b34a_initial_schema_6_tables.py   # - [x] Sprint 1
-│   │       └── f9bd8a66_add_sessions_table.py        # - [x] Sprint 2
+│   │       ├── f9bd8a66_add_sessions_table.py        # - [x] Sprint 2
+│   │       └── 8672b19c_add_is_public_to_provider_locations.py  # - [x] Sprint 5 (ADR-013)
 │   ├── app/
 │   │   ├── __init__.py
-│   │   ├── main.py                     # - [x] Sprint 0/2/4: FastAPI app, health check, CORS middleware, auth + profile routers
-│   │   ├── config.py                   # - [x] Sprint 0/2: Pydantic settings (DB, secret_key, session lifetime, CORS, debug)
+│   │   ├── main.py                     # - [x] Sprint 0/2/4/5: FastAPI app, health check, CORS middleware, auth + profile + photo + location routers, static file serving (dev)
+│   │   ├── config.py                   # - [x] Sprint 0/2/5: Pydantic settings (DB, secret_key, session lifetime, CORS, debug, photo_upload_dir)
 │   │   ├── database.py                 # - [x] Sprint 0: Async engine + session setup
 │   │   ├── dependencies.py            # - [x] Sprint 2: get_current_user, csrf_protect, require_admin (Depends chain)
 │   │   ├── seed.py                    # - [x] Sprint 2: CLI script to create admin User
@@ -82,17 +83,24 @@ ohp-app/
 │   │   ├── routes/
 │   │   │   ├── __init__.py             # - [x] Sprint 0: scaffold
 │   │   │   ├── auth.py                # - [x] Sprint 2: register, login, logout, me
-│   │   │   └── profile.py            # - [x] Sprint 4: credentials list, own profile CRUD, public profile
+│   │   │   ├── profile.py            # - [x] Sprint 4: credentials list, own profile CRUD, public profile
+│   │   │   ├── photo.py              # - [x] Sprint 5: upload + delete profile photo
+│   │   │   └── locations.py          # - [x] Sprint 5: location CRUD (list/create/patch/delete)
 │   │   └── services/
 │   │       ├── __init__.py             # - [x] Sprint 0: scaffold
 │   │       ├── auth_service.py        # - [x] Sprint 2: argon2id hashing, register_provider, authenticate_user, slug generation
 │   │       ├── profile_service.py    # - [x] Sprint 4: credential queries, provider lookup, profile updates, credential replacement
-│   │       └── session_service.py     # - [x] Sprint 2: create/get/delete session (~50 lines)
-│   └── tests/                          # - [x] PyTests: 72/72 pass
+│   │       ├── session_service.py     # - [x] Sprint 2: create/get/delete session (~50 lines)
+│   │       ├── photo_service.py      # - [x] Sprint 5: photo validation, upload, delete (delegates to storage backend)
+│   │       ├── location_service.py   # - [x] Sprint 5: location CRUD, is_primary management, max-10 guard
+│   │       └── storage.py            # - [x] Sprint 5: storage abstraction — LocalStorage (dev) / S3Storage (prod, Sprint 12)
+│   └── tests/                          # - [x] PyTests: 128/128 pass
 │       ├── __init__.py
 │       ├── test_models.py              # - [x] Sprint 1: 25 tests: enum completeness, credentials.json integrity, model defaults
 │       ├── test_auth.py                # - [x] Sprint 2: 18 tests (no DB): argon2id roundtrip, pw len, token format, CSRF compare_digest, slug generation, Session model fields. No DB needed.
-│       └── test_profile.py             # - [x] Sprint 4: 29 tests (no DB): schema validation, EDITABLE_FIELDS whitelist, response field presence (OwnProfile has draft+status, PublicProfile omits them), enum serialization sanity
+│       ├── test_profile.py             # - [x] Sprint 4: 29 tests (no DB): schema validation, EDITABLE_FIELDS whitelist, response field presence (OwnProfile has draft+status, PublicProfile omits them), enum serialization sanity
+│       ├── test_photo.py               # - [x] Sprint 5: 28 tests (no DB): file validation (type, size, empty), storage abstraction, upload/delete flows, photo_url lifecycle
+│       └── test_locations.py           # - [x] Sprint 5: 28 tests (no DB): location CRUD schemas, is_primary logic, is_public filtering, max-10 limit, public vs own response fields
 └── frontend/
     ├── .gitignore                      # - [x] Sprint 0: Vite/Node defaults
     ├── index.html                      # - [x] Sprint 0: Vite entry point

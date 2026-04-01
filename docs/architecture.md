@@ -171,12 +171,13 @@ Seed data (17 entries):
 | `practice_name` | str | Optional — e.g. "Pacific Dental Services" (may differ per location) |
 | `address_line1` | str | |
 | `address_line2` | str | Optional |
-| `city` | str | Indexed |
+| `city` | str | Nullable, indexed — zip-only private locations may omit (ADR-013; geocoding backfills in Sprint 7) |
 | `state` | str | Always "OR" for now, but don't hardcode (ADR-008) |
 | `zip_code` | str | Indexed |
 | `latitude` | float | For Haversine search |
 | `longitude` | float | For Haversine search |
 | `is_primary` | bool | Which location shows first |
+| `is_public` | bool | Default true. False = search-only, invisible on public profile (ADR-013) |
 
 ### Feedback / Reports
 
@@ -236,6 +237,10 @@ Seed data (17 entries):
 | `PUT` | `/api/me/credentials` | Set credential codes (replaces full list) |
 | `POST` | `/api/me/photo` | Upload profile photo |
 | `DELETE` | `/api/me/photo` | Remove profile photo |
+| `GET` | `/api/me/locations` | List own practice locations |
+| `POST` | `/api/me/locations` | Add a practice location (max 10) |
+| `PATCH` | `/api/me/locations/{location_id}` | Edit a practice location |
+| `DELETE` | `/api/me/locations/{location_id}` | Remove a practice location |
 
 ### Admin (authenticated, role=ADMIN only)
 
