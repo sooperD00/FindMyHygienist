@@ -381,3 +381,70 @@ The intake form should contextually guide providers toward appropriate location 
      an EPDH might have a clinic they do. The form guides, not restricts. -->
 
 The `is_public` checkbox should use friendlier copy than "is_public" — something like **"Show on my profile"** with helper text that explains what happens in each state. When unchecked: *"This location is used for search only. Patients won't see it."* When checked: *"Patients will see this location's name and city on your profile."*
+
+---
+
+# ADR-014: Single Accordion Intake Form
+
+**Status:** Accepted  
+**Date:** 2026-04-01  
+**Project:** OralHealthProviders.org
+
+## Context
+
+We need a provider signup/intake form that works in two very different contexts:
+
+1. **Conference booth** — providers signing up on their phones in a crowd, probably don't have their bio or a headshot handy, want to get in and out fast.
+2. **Organic web traffic** — providers who found the site on their own, sitting at home, ready to build out a full profile.
+
+PsychologyToday-style directories live and die by provider completeness, so there's pressure to ask for everything upfront. But asking for everything at a conference booth means people bounce.
+
+## Decision
+
+**One intake form, two speeds.** The form is a multi-step wizard (URL stays `/join`, steps managed by React state, no routing per step). Accordions handle optional fields within the heavy steps.
+
+### Wizard Steps
+
+1. **Account creation** — name, email, password, provider_type, "Home Base" with input suggestion text = "city or zip" (labeled as private, for search radius, goes into db with label "based in"), accepting_new_patients=true, max_travel_distance dropdown with default = 25 mi. POST, hard save. This minimum set allows me to say "fill out this one screen and you're findable." 
+2. **Profile fields** — User needs to be notified with some microcopy now that
+"You're findable! Patients can see your profile in search results. Add contact info below so they can reach you." Then the profile fields are grouped into accordions (see ordering below), with Credentials and Contact Preferences accordions open to indicate importance and everything else closed. PATCH, hard save.
+3. **Confirmation** — not a save, just a "you're done" screen. Fetch `GET /api/providers/me` and render based on profile status: if `active`, show "You're live!" with a link to their public profile page; if `pending`, show "Your profile is pending review" with a link to /dashboard. (Frontend never reads backend config — it just reacts to the status the API already set.)
+
+### Step 2 Profile Fields Accordion Ordering
+
+The wizard handles cognitive chunking between *categories*; accordions handle cognitive chunking *within* the big category. Credentials and Contact Preferences open by default to signal importance; all others closed. Ordered roughly in importance order and in order that the user expects from LinkedIn and other comparable websites to be displayed on their profile page.
+
+1. **Photo** — **first**, because the provider focus group asked for this before giving any other feedback. First position signals we listened. But **closed** by default respects that these providers invest seriously in their professional image and will want to choose the right photo, not a conference selfie. Uses `<input type="file" accept="image/*">`, which triggers the native camera/gallery picker on mobile — no custom camera integration needed.
+2. **Bio & title line** - closed
+3. **Credentials** — license info. (CredentialSelector component) - **OPEN**
+4. **Contact preferences** (phone, public email, website) - **OPEN**
+5. **Specialties, services & populations served** - closed
+6. **Travel From and Practice Locations** — LocationEntry component. "Mark locations you travel from as private." "Mark locations you practice at as public." Use a different color in the UX for these 2 groups so it helps them see what's public and private. Public on top with example. Private on bottom with example and using home base city or zip from intake section 1. Toggle that swaps the location of the address fields to the proper section for is_public. PATCH, hard save. - closed
+7. **Insurance accepted** - closed
+8. **Languages** - closed
+9. **Availability & scheduling preferences** - closed
+10. **Tags & additional info** - closed
+
+Accordion labels are written to double as a feature list for browsing customers at the conference booth — they see what the platform *can* hold without being asked to fill it all in now.
+
+### No Nag Notifications
+
+No "Complete your profile!" push emails or banners. Instead, a **silent progress bar on the provider dashboard** — visible when they log in, ignorable, their choice.
+
+## Rationale
+
+- **Conversion at the booth matters more than completeness at signup.** We can't sell the platform to the Oregon Dental Hygienists Association if providers bounce off a 15-field form while standing in line.
+- **One form forever** avoids maintaining two flows and two sets of validation logic.
+- **Accordions show the feature depth** to potential paying customers without punishing fast signups. Closed accordions are a promise, not a demand.
+- **No nag pattern** respects provider autonomy. (I hate when apps do this to me, and providers will too.) A dashboard progress bar gives the same information without the emotional manipulation.
+- **Photo first** because the users told us to. The focus group's first reaction was about photos — that's data, not a guess.
+- **Home base in Step 1** means one screen = findable. Conference booth providers can literally stop after Step 1 and still appear in search.
+- **Status-based confirmation** decouples frontend from backend config, survives future approval workflow changes.
+- **Microcopy at Step 2** bridges the findable → contactable gap without nag patterns.
+
+## Consequences
+
+- Profiles will be sparse initially. Search/matching quality depends on how many providers fill out specialties and locations later. The progress bar is the gentle nudge; if it's not enough, we revisit — but we start here.
+- Accordion label copy is doing real work (UI affordance + sales copy). Worth spending time on wording.
+- Dashboard must include the profile editing flow so providers can come back and fill in what they skipped.
+- Accordion section ordering is intentional — photo first (focus group data), credentials and contact preferences open (findable → contactable flow), LinkedIn-familiar sequence for the rest. Exact ordering may shift during implementation when we see layout but the design flow is intentional.
