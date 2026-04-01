@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'http://localhost:8000',  // Vite proxy so /api/* calls from the frontend hit your FastAPI backend
+      '/uploads': 'http://localhost:8000',  // Sprint 6: photo URLs served by FastAPI static files in dev
     },
   },
 })
