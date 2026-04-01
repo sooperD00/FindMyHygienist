@@ -9,9 +9,22 @@
  *
  * The csrf_token cookie is a *delivery mechanism* — the source of truth
  * is the session row, not the cookie. See dependencies.py.
+ * 
+ * TODO: res.json() returns `any` — return types are trusted, not
+ * validated. Add Zod schemas for each response type and .parse()
+ * before returning. See tech debt list.
  */
 
 import type { LoginRequest, MeResponse, RegisterRequest } from "../types/auth";
+import type {
+  Credential,
+  LocationCreate,
+  LocationUpdate,
+  OwnLocation,
+  OwnProfile,
+  PhotoResponse,
+  ProfileUpdate,
+} from "../types/provider";
 
 const API_BASE = "/api";
 
@@ -49,7 +62,15 @@ export async function apiFetch(
   const method = (options.method ?? "GET").toUpperCase();
   const headers = new Headers(options.headers);
 
-  if (options.body && !headers.has("Content-Type")) {
+  // FormData must be left alone — the browser generates the multipart
+  // boundary string automatically, and setting Content-Type manually
+  // stomps it. (Tests: client-profile.test.ts, first two cases.)
+  const needsJsonContentType =
+    options.body &&
+    !headers.has("Content-Type") &&
+    !(options.body instanceof FormData);
+
+  if (needsJsonContentType) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -113,4 +134,91 @@ export async function fetchHealth(): Promise<{ status: string }> {
   const res = await fetch(`${API_BASE}/health`);  // raw fetch (not apiFetch) bc no auth, CSRF, structured error parsing needed etc
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
+}
+
+// ── Credentials (public) ──────────────────────────────────────────
+
+export async function apiGetCredentials(): Promise<Credential[]> {
+  const res = await apiFetch("/credentials");
+  return res.json();
+}
+
+// ── Profile (authenticated) ───────────────────────────────────────
+
+export async function apiGetOwnProfile(): Promise<OwnProfile> {
+  const res = await apiFetch("/me/profile");
+  return res.json();
+}
+
+export async function apiUpdateProfile(data: ProfileUpdate): Promise<OwnProfile> {
+  const res = await apiFetch("/me/profile", {  // Profile is a (heterogeneous) record — fixed, named fields of different types -> dict/kvps -> PATCH
+    method: "PATCH", // "Here are the three fields I changed, leave everything else alone." BE uses `exclude_unset`
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function apiUpdateCredentials(
+  codes: string[]
+): Promise<Credential[]> {  // Credentials are a (homogeneous) collection — a variable number of items that are all the same shape -> array -> PUT
+  const res = await apiFetch("/me/credentials", { // ["RDH", "EPDH"] 
+    method: "PUT",  // "Here is the complete list. Replace whatever's there with this."
+    body: JSON.stringify({ codes }),
+  });
+  return res.json();
+}
+
+// ── Photo (authenticated, multipart) ──────────────────────────────
+
+export async function apiUploadPhoto(file: File): Promise<PhotoResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await apiFetch("/me/photo", {
+    method: "POST",
+    body: formData,
+    // Content-Type intentionally omitted — browser sets it with
+    // multipart boundary. The FormData check in apiFetch() handles this.
+  });
+  return res.json();
+}
+
+export async function apiDeletePhoto(): Promise<PhotoResponse> {
+  const res = await apiFetch("/me/photo", { method: "DELETE" });
+  return res.json();  
+  // backend returns { photo_url: null }
+  // returns the new state (null URL) so the UI can update
+}
+
+// ── Locations (authenticated) ─────────────────────────────────────
+
+export async function apiGetLocations(): Promise<OwnLocation[]> {
+  const res = await apiFetch("/me/locations");
+  return res.json();
+}
+
+export async function apiCreateLocation(
+  data: LocationCreate
+): Promise<OwnLocation> {
+  const res = await apiFetch("/me/locations", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function apiUpdateLocation(
+  id: string,
+  data: LocationUpdate
+): Promise<OwnLocation> {
+  const res = await apiFetch(`/me/locations/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function apiDeleteLocation(id: string): Promise<void> {
+  await apiFetch(`/me/locations/${id}`, { method: "DELETE" });
+  // no return — backend returns 204 No Content
+  // returns nothing because the UI just removes the card
 }
