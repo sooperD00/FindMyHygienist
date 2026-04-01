@@ -7,6 +7,9 @@ __pycache__/
 *.pyc
 frontend/src/__tests__/results*.txt
 
+# pics for bio (when testing local)
+backend/uploads
+
 
 
 # === Python ===
