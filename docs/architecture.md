@@ -233,7 +233,7 @@ Seed data (17 entries):
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/me/profile` | Get own profile including draft and credentials |
-| `PUT` | `/api/me/profile` | Edit profile (lands in draft if already approved) |
+| `PATCH` | `/api/me/profile` | Edit profile (lands in draft if already approved) |
 | `PUT` | `/api/me/credentials` | Set credential codes (replaces full list) |
 | `POST` | `/api/me/photo` | Upload profile photo |
 | `DELETE` | `/api/me/photo` | Remove profile photo |
