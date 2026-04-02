@@ -160,7 +160,7 @@ describe("Join wizard", () => {
 
     // Fill in the required fields
     await user.type(screen.getByLabelText(/full name/i), "Jane Smith");
-    await user.type(screen.getByLabelText(/email/i), "jane@test.com");
+    await user.type(screen.getByLabelText("Email"), "jane@test.com");
     await user.type(screen.getByLabelText(/password/i), "password123");
 
     // Submit
