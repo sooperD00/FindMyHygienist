@@ -105,7 +105,7 @@ ohp-app/
     ├── .gitignore                      # - [x] Sprint 0: Vite/Node defaults
     ├── index.html                      # - [x] Sprint 0: Vite entry point
     ├── package.json                    # - [x] Sprint 0: React 19, react-router-dom v7, Vite 8
-    ├── vite.config.ts                  # - [x] Sprint 0: Vite proxy /api/* → localhost:8000
+    ├── vite.config.ts                  # - [x] Sprint 0/6: Vite proxy /api/* + /uploads/* → localhost:8000
     ├── tsconfig.json                   # - [x] Sprint 0: TypeScript project references
     ├── tsconfig.app.json               # - [x] Sprint 0: app-level TS config
     ├── tsconfig.node.json              # - [x] Sprint 0: node-level TS config
@@ -118,27 +118,35 @@ ohp-app/
         ├── App.css                     # - [x] Sprint 0: app styles (Vite default, to be replaced)
         ├── index.css                   # - [x] Sprint 0: global styles (Vite default, to be replaced)
         ├── api/
-        │   └── client.ts              # - [x] Sprint 0/3: typed API client with CSRF token handling, auth endpoints
+        │   └── client.ts              # - [x] Sprint 0/3/6: typed API client — CSRF handling, auth endpoints, profile/credential/photo/location wrappers (FormData-aware)
         ├── assets/
-        │   └── hero.png               # - [x] Sprint 0: landing page hero image
+        │   ├── hero.png               # - [x] Sprint 0: landing page hero image
+        │   └── default-avatar.svg     # - [x] Sprint 6: placeholder photo for providers who haven't uploaded one
         ├── contexts/
         │   └── AuthContext.tsx         # - [x] Sprint 3: auth state provider (login/register/logout + GET /me on mount)
         ├── components/
         │   ├── Layout.tsx             # - [x] Sprint 0/3: shell (nav + footer) with <Outlet />, auth-aware nav links
         │   ├── ProtectedRoute.tsx     # - [x] Sprint 3: redirects to /login if not authenticated
-        │   └── AdminRoute.tsx         # - [x] Sprint 3: redirects to / if not role=ADMIN
+        │   ├── AdminRoute.tsx         # - [x] Sprint 3: redirects to / if not role=ADMIN
+        │   ├── Accordion.tsx          # - [x] Sprint 6: generic collapsible section (uncontrolled open/close)
+        │   ├── CredentialSelector.tsx  # - [x] Sprint 6: checkbox grid from GET /api/credentials, grouped by type
+        │   ├── IntakeProfile.tsx      # - [x] Sprint 6: Step 2 accordion form — 10 sections (photo, bio, credentials, contact, specialties, locations, insurance, languages, availability, tags)
+        │   ├── ListInput.tsx          # - [x] Sprint 6: reusable add/remove list for services, specialties, etc.
+        │   ├── LocationEntry.tsx      # - [x] Sprint 6: location CRUD — add/toggle is_public/delete, ADR-013 guided UX
+        │   └── PhotoUpload.tsx        # - [x] Sprint 6: profile photo upload/delete with preview
         ├── pages/
         │   ├── Home.tsx               # - [x] Sprint 0: stub
         │   ├── Search.tsx             # - [x] Sprint 0: stub
         │   ├── Profile.tsx            # - [x] Sprint 0: stub
         │   ├── About.tsx              # - [x] Sprint 0: stub
-        │   ├── Join.tsx               # - [x] Sprint 3: Join form with auth
+        │   ├── Join.tsx               # - [x] Sprint 3/6: 3-step wizard — account creation, intake profile (IntakeProfile), confirmation
         │   ├── Login.tsx              # - [x] Sprint 3: Login form with auth
         │   ├── Dashboard.tsx          # - [x] Sprint 3: stub with auth
         │   ├── Admin.tsx              # - [x] Sprint 3: stub with auth
         │   └── NotFound.tsx           # - [x] Sprint 0: stub
         ├── types/
-        │   └── auth.ts               # - [x] Sprint 3: UserResponse, MeResponse, RegisterRequest, LoginRequest, ProviderType
+        │   ├── auth.ts               # - [x] Sprint 3: UserResponse, MeResponse, RegisterRequest, LoginRequest, ProviderType
+        │   └── provider.ts           # - [x] Sprint 6: OwnProfile, ProfileUpdate, Credential, OwnLocation, LocationCreate/Update, PhotoResponse
         └── __tests__/                 # - [x] Vitest: 26/26 pass
             ├── setup.ts               # - [x] Sprint 3: test setup (jsdom globals)
             ├── client.test.ts         # - [x] Sprint 3: 9 tests — apiFetch, CSRF, auth wrappers
