@@ -59,15 +59,16 @@ class OwnLocationResponse(BaseModel):
 
 
 class PublicLocationResponse(BaseModel):
-    """Patient-facing location — label + city + state only (ADR-013).
+    """Patient-facing location — label + practice name + city + state (ADR-013).
 
     Never includes street address, zip code, or coordinates.
-    Patients see "Main Office — Portland, OR" and contact the
-    provider directly. Full address display is a future opt-in.
+    Patients see "Main Office — Pacific Dental Services — Portland, OR"
+    and contact the provider directly. Full address display is a future opt-in.
     """
 
     id: str
     label: str
+    practice_name: str | None = None
     city: str | None = None
     state: str
     is_primary: bool
@@ -134,6 +135,7 @@ def _location_to_public_response(loc) -> PublicLocationResponse:
     return PublicLocationResponse(
         id=str(loc.id),
         label=loc.label,
+        practice_name=loc.practice_name,
         city=loc.city,
         state=loc.state,
         is_primary=loc.is_primary,
