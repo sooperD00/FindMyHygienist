@@ -6,8 +6,25 @@
 
 ---
 
+## Sprint 6 — Frontend: API Client, Intake Form, Location Entry (Day 15) - DONE 4/2 10:48a
 
-## Sprint 5 — Photo Upload & Location CRUD (Day 11-14) 3/29-4/1 10:39a
+**Goal:** A provider can register, fill out their profile, upload a photo, and add practice locations. This is the data-entry half of the conference demo surface.
+
+- [x] Verify /uploads/* photo URLs work through Vite proxy in dev — test before building any component that renders photos (see Housekeeping note)
+- [x] Extend client.ts with typed API wrappers for: GET/PATCH profile, GET/PUT credentials, POST/DELETE photo (multipart — needs to skip the default Content-Type: application/json), GET/POST/PATCH/DELETE locations
+- [x] Frontend: Join page expanded — full intake flow (account creation → credential selection → profile fields → location entry → photo upload → submission confirmation)
+- [x] Frontend: Credential chip selector — checkboxes from GET /api/credentials, grouped by type (License, Degree, Permit, Specialty)
+- [x] Frontend: Location entry — add/edit/remove practice locations. UX guided by ADR-013: traveling/mobile providers get "Where do you travel from?" with is_public unchecked and zip-only input; fixed-location providers get office address with is_public checked. Checkbox copy: "Show on my profile" (not "is_public"). See ADR-013 Frontend guidance section.
+- [x] Placeholder profile photo for providers who haven't uploaded one (static asset / default avatar)
+
+<!-- This sprint is about wiring the frontend to every /api/me/* endpoint
+     that Sprints 4-5 built. The API client extensions are the foundation —
+     every subsequent frontend sprint depends on them. The intake form is
+     the surface providers will use at the conference booth. -->
+
+---
+
+## Sprint 5 — Photo Upload & Location CRUD (Day 11-14) - DONE 3/29-4/1 10:39a
 
 **Goal:** Backend handles file uploads and multi-location provider records.
 
