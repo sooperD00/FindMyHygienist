@@ -1,3 +1,13 @@
+/* TODO: Sprint 11 polish pass
+   - Extract location colors into CSS variables (--location-public, --location-private)
+     so the green/blue values aren't repeated across section, card, and dark mode rules
+   - Mobile responsive pass: .location-form-row city/state/zip will be tiny on phones
+     (needs flex-wrap or stacked layout below ~480px)
+   - Mobile responsive pass: .confirmation-step buttons may overflow horizontally
+     (switch to flex-column on narrow screens)
+   - Grep for dead CSS classes (e.g. .btn-save is defined but never used in components)
+*/
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -195,4 +205,537 @@ form button[type="submit"]:disabled {
   color: inherit;
   cursor: pointer;
   padding: 0;
+}
+
+/* ── Sprint 6: wizard, accordions, intake components ──────────── */
+
+/* -- Layout helpers -- */
+
+.page-medium {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 24px;
+  text-align: left;
+}
+
+.page-medium h1 {
+  font-size: 32px;
+  text-align: left;
+}
+
+textarea {
+  font: inherit;
+  font-size: 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+textarea:focus {
+  outline: 2px solid var(--accent-border);
+  outline-offset: 1px;
+}
+
+.helper-text {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 400;
+}
+
+.form-error-inline {
+  font-size: 13px;
+  color: #dc2626;
+  margin-left: 8px;
+}
+
+/* -- Buttons -- */
+
+.btn {
+  font: inherit;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-primary {
+  padding: 12px 24px;
+  color: #fff;
+  background: var(--accent);
+}
+
+.btn-secondary {
+  padding: 12px 24px;
+  color: var(--text-h);
+  background: var(--code-bg);
+}
+
+.btn-small {
+  padding: 6px 14px;
+  font-size: 14px;
+  color: #fff;
+  background: var(--accent);
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* -- Wizard steps -- */
+
+.join-wizard {
+  padding-bottom: 48px;
+}
+
+.wizard-steps {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 0 8px;
+}
+
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.wizard-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  border: 2px solid var(--border);
+  color: var(--text);
+}
+
+.wizard-step.active .wizard-step-num {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.wizard-step.completed .wizard-step-num {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.wizard-step + .wizard-step::before {
+  content: "—";
+  color: var(--border);
+  margin-right: 4px;
+}
+
+/* -- Accordion -- */
+
+.accordion {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 14px 16px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-h);
+  background: var(--code-bg);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.accordion-header:hover {
+  background: var(--accent-bg);
+}
+
+.accordion-chevron {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.accordion-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* -- Credential selector -- */
+
+.credential-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.credential-group {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.credential-group legend {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin-bottom: 8px;
+}
+
+.credential-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.credential-item input[type="checkbox"] {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.credential-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.credential-info small {
+  font-size: 12px;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+/* -- Photo upload -- */
+
+.photo-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.photo-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--code-bg);
+}
+
+.photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-img-placeholder {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  opacity: 0.5;
+}
+
+.photo-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.photo-upload-label {
+  cursor: pointer;
+}
+
+/* -- List input (tags, services, etc.) -- */
+
+.list-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.list-input-row input {
+  flex: 1;
+}
+
+.list-input-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 13px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 16px;
+  color: var(--text-h);
+}
+
+.chip-remove {
+  font: inherit;
+  font-size: 15px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  padding: 0;
+  line-height: 1;
+}
+
+.chip-remove:hover {
+  color: #dc2626;
+}
+
+/* -- Location entry -- */
+
+.location-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.location-section {
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.location-section h4 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: var(--text-h);
+}
+
+.location-section-public {
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.location-section-private {
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.location-empty {
+  font-size: 13px;
+  color: var(--text);
+  font-style: italic;
+  margin: 4px 0 12px;
+}
+
+.location-card {
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.location-card-public {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.location-card-private {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+.location-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.location-practice {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.location-badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.location-card-detail {
+  font-size: 13px;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.location-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.location-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.location-add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+}
+
+.location-form-row {
+  display: flex;
+  gap: 8px;
+}
+
+.location-form-city {
+  flex: 2;
+}
+
+.location-form-state {
+  flex: 0 0 60px;
+}
+
+.location-form-zip {
+  flex: 1;
+}
+
+.location-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* -- Section save & misc -- */
+
+.section-save-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn-save {
+  min-width: 80px;
+}
+
+.checkbox-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.checkbox-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.intake-microcopy {
+  padding: 16px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.intake-microcopy p {
+  font-size: 15px;
+  color: var(--text-h);
+}
+
+.intake-done-row {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.confirmation-step {
+  text-align: center;
+  padding-top: 24px;
+}
+
+.confirmation-step .btn {
+  margin-top: 16px;
+}
+
+.confirmation-step .btn + .btn {
+  margin-left: 12px;
+}
+
+/* Dark mode overrides for location sections */
+@media (prefers-color-scheme: dark) {
+  .location-section-public {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.25);
+  }
+  .location-section-private {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.25);
+  }
+  .location-card-public {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.2);
+  }
+  .location-card-private {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.2);
+  }
 }
