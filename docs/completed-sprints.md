@@ -4,6 +4,26 @@
      Include the actual date range, any deviations from plan, and
      links to relevant commits or PRs. Latest sprints are at the top. -->
 
+
+---
+
+## Sprint 7 — Component Tests for Sprint 6 (Day 15) - DONE 4/2
+
+**Goal:** Test the intake flow components that Sprint 6 built. Extends the Vitest pattern from Sprint 3.
+
+- [x] Smoke tests for IntakeProfile — renders accordion sections, per-section save triggers PATCH
+- [x] CredentialSelector — renders grouped checkboxes, selection/deselection works
+- [x] LocationEntry — add location, toggle is_public, delete
+- [x] PhotoUpload — renders upload button, preview after upload, delete
+- [x] Accordion — open/close toggle, default open vs closed
+- [x] ListInput — add item, remove item, empty state
+- [x] Join wizard — step transitions (Step 1 → Step 2 → Step 3), already-logged-in skip to Step 2
+
+<!-- Sprint 6 shipped 6 new components and a 3-step wizard with no
+     component tests. The API wrappers are tested (client-profile.test.ts,
+     17 tests) but the components that USE them aren't. This sprint
+     closes that gap before building more UI on top in Sprints 8-9. -->
+
 ---
 
 ## Sprint 6 — Frontend: API Client, Intake Form, Location Entry (Day 15) - DONE 4/2 10:48a
