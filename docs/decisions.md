@@ -185,7 +185,7 @@
 ## ADR-012: Separate draft review lifecycle from directory visibility status
 
 **Date:** 2026-03-28
-**Status:** Proposed (implementation deferred to Sprint 9)
+**Status:** Proposed (implementation deferred to post-conference)
 
 **Context:** The original data model uses a single `Provider.status` enum (PENDING, APPROVED, CHANGES_REQUESTED, SUSPENDED) for two unrelated concerns:
 
@@ -295,7 +295,7 @@ Bool on User. False = can't log in. This is the nuclear option for accounts that
 
 Text column, nullable. Set by admin when requesting changes or suspending. Cleared when the provider resubmits or when admin approves. The provider dashboard shows this message — "Nicole says: please remove the phone number from your bio, it belongs in the contact section."
 
-<!-- This was already flagged in remaining-sprints.md Sprint 9 comment:
+<!-- This was already flagged in remaining-sprints.md (admin sprint) comment:
      "Provider has no field for that message yet. Decide here: either add
      an admin_message text column on Provider (simplest), or stash it
      in the draft JSON blob." Decision: dedicated column. The message
@@ -310,13 +310,13 @@ Text column, nullable. Set by admin when requesting changes or suspending. Clear
 - **Backwards-compatible.** `draft_status` is nullable — null means no review pending. Existing providers (from conference) have no draft and no draft_status, which is correct. The new field only activates when the review workflow is actually used.
 - **CHANGES_REQUESTED moves to the right place.** It was never a visibility state. It's a turn-tracking state. Putting it on `draft_status` instead of `status` means an APPROVED provider asking for a bio tweak stays live on the directory the entire time.
 
-**Migration plan (Sprint 9):**
+**Migration plan (post-conference):**
 
 1. Add `draft_status` column (VARCHAR, nullable) to providers table
 2. Add `admin_message` column (TEXT, nullable) to providers table
 3. Remove `CHANGES_REQUESTED` from `ProviderStatus` enum in Postgres
    - If any existing rows have status = CHANGES_REQUESTED, migrate them to PENDING + draft_status = CHANGES_REQUESTED first
-   - Alembic: ALTER TYPE providerstatus RENAME VALUE... (Postgres doesn't support DROP VALUE from enums cleanly — may need to recreate the type. Cross that bridge in Sprint 9.)
+   - Alembic: ALTER TYPE providerstatus RENAME VALUE... (Postgres doesn't support DROP VALUE from enums cleanly — may need to recreate the type. Cross that bridge post-conference.)
 4. Set `draft_status = REVIEW_NEEDED` on any existing rows where `status = PENDING` (conference signups that Nicole hasn't reviewed yet)
 5. Update profile_service.py: `update_provider_profile` sets `draft_status = REVIEW_NEEDED` when writing to draft
 6. Build admin endpoints that consume draft_status
@@ -352,18 +352,18 @@ Text column, nullable. Set by admin when requesting changes or suspending. Clear
 **Migration (Sprint 5):**
 
 1. Add `is_public` column (BOOLEAN, NOT NULL, DEFAULT TRUE) to `provider_locations`
-2. Make `city` nullable on `provider_locations` — zip-code-only private locations won't always have a city (geocoding in Sprint 8 can backfill it from the zip)
+2. Make `city` nullable on `provider_locations` — zip-code-only private locations won't always have a city (geocoding in Sprint 10 can backfill it from the zip)
 
 **Rationale:**
 
 - **One table, one flag.** A public office and a private home base are the same shape of data — address, label, coordinates. Splitting them into separate tables doubles the CRUD, doubles the search query joins, and creates a "which table do I add this to?" UX decision that maps poorly to how providers think about their locations. A boolean on the existing table is the minimum viable distinction.
 - **Default public.** Most locations are practice sites that providers want displayed. The private case (traveling from home) is the exception that needs an explicit opt-out, not the default. This keeps the intake flow simple for the common case (dentist entering an office address) while still supporting the EPDH case.
-- **Search uses all locations regardless of is_public.** Sprint 8's search service queries `provider_locations` without filtering on `is_public` — a private home-base location still puts the provider in radius results. The flag only affects what appears on the public profile.
+- **Search uses all locations regardless of is_public.** Sprint 10's search service queries `provider_locations` without filtering on `is_public` — a private home-base location still puts the provider in radius results. The flag only affects what appears on the public profile.
 - **No address exposure on public profiles yet.** Even for public locations, showing label + city + state is enough for MVP. Patients see "Community Health Center — Salem, OR" and contact the provider directly. Full address display is a future opt-in if providers request it. Starting restrictive and opening up is safer than the reverse.
 
 **Alternatives considered:**
 
-- **Separate `private_locations` table for travel bases:** Cleaner separation of concerns, but doubles CRUD and complicates Sprint 8's search query (UNION or two joins). The data shape is identical — a table split is organizational, not structural. The boolean achieves the same result with less code.
+- **Separate `private_locations` table for travel bases:** Cleaner separation of concerns, but doubles CRUD and complicates Sprint 10's search query (UNION or two joins). The data shape is identical — a table split is organizational, not structural. The boolean achieves the same result with less code.
 - **No is_public flag — just never show locations publicly, rely on radius search only:** Simpler, but throws away the "Main Office — Portland, OR" display that builds trust on profiles. Providers with public practices want that visibility. The flag lets each provider decide per-location.
 - **Provider-level visibility toggle instead of per-location:** A single "show my locations" toggle on the Provider record. Simpler, but doesn't handle the mixed case (EPDH who travels from home AND works at a clinic). Per-location granularity is the right level.
 
@@ -371,7 +371,7 @@ Text column, nullable. Set by admin when requesting changes or suspending. Clear
 
 The intake form should contextually guide providers toward appropriate location setup based on their situation. Two patterns:
 
-1. **Traveling/mobile providers (EPDH, mobile hygienists):** The form should lead with something like "Where do you travel from?" with helper text: *"This helps patients near you find you in search — it won't appear on your profile."* `is_public` pre-unchecked. Address fields relaxed — entering just a zip code is sufficient (geocoding backfills city/coordinates in Sprint 8). Label defaults to "Travel base" or similar, editable. Below this, an "Add a practice location" option for any public sites they also serve.
+1. **Traveling/mobile providers (EPDH, mobile hygienists):** The form should lead with something like "Where do you travel from?" with helper text: *"This helps patients near you find you in search — it won't appear on your profile."* `is_public` pre-unchecked. Address fields relaxed — entering just a zip code is sufficient (geocoding backfills city/coordinates in Sprint 10). Label defaults to "Travel base" or similar, editable. Below this, an "Add a practice location" option for any public sites they also serve.
 
 2. **Fixed-location providers (dentists, clinic-based hygienists):** The form leads with the office address, `is_public` checked by default, guided label suggestions ("Main Office", "Community Health Center", "School-Based Program", plus freeform). The private/travel option is available via "Add another location" but not front-and-center.
 
@@ -416,7 +416,7 @@ The `is_public` checkbox should use friendlier copy than "is_public" — somethi
 - **Conversion at the booth matters more than completeness at signup.** We can't sell the platform to ODHA if providers bounce off a 15-field form while standing in line.
 - **One form forever** avoids maintaining two flows and two sets of validation logic.
 - **Accordions show feature depth** to potential paying customers without punishing fast signups. Closed accordions are a promise, not a demand.
-- **No nag pattern.** No "Complete your profile!" push emails or banners. A silent progress bar on the dashboard (Sprint 7+) gives the same information without emotional manipulation.
+- **No nag pattern.** No "Complete your profile!" push emails or banners. A silent progress bar on the dashboard (Sprint 9+) gives the same information without emotional manipulation.
 - **Photo first** because users told us to. Focus group's first reaction was about photos — that's data, not a guess. But closed by default because providers invest seriously in their professional image.
 - **Home base in Step 1** means one screen = findable. Conference booth providers can stop after Step 1 and still appear in search.
 - **Status-based confirmation** decouples frontend from backend config, survives future approval workflow changes.

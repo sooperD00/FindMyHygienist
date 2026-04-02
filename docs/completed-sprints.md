@@ -28,9 +28,9 @@
 
 **Goal:** Backend handles file uploads and multi-location provider records.
 
-- [x] `POST /api/me/photo` — upload profile photo, store URL. Dev: local filesystem stub behind a storage interface. Prod S3 backend wired in Sprint 12 (bucket doesn't exist yet).
+- [x] `POST /api/me/photo` — upload profile photo, store URL. Dev: local filesystem stub behind a storage interface. Prod S3 backend wired in Sprint 14 (bucket doesn't exist yet).
 - [x] `DELETE /api/me/photo` — remove profile photo
-- [x] Provider Location CRUD — add/edit/remove practice locations with label, practice_name, addresses. Lat/lng columns stay nullable — geocoding deferred to Sprint 8 when Nominatim implementation exists.
+- [x] Provider Location CRUD — add/edit/remove practice locations with label, practice_name, addresses. Lat/lng columns stay nullable — geocoding deferred to Sprint 10 when Nominatim implementation exists.
 
 <!-- Different shape of work from Sprint 4: file validation, storage
      abstraction, and a multi-record sub-resource. Benefits from its
@@ -85,8 +85,8 @@
 - [x] Auth middleware: protect `/api/me/*` and `/api/admin/*` routes
 - [x] Admin check: `User.role == ADMIN` (ADR-009)
 - [x] Create Nicole's admin User record (seed or CLI command)
-- [x] CORS middleware on FastAPI (Vite proxy covers dev, but prod needs it — do it now so it doesn't bite us in Sprint 7)
-- [x] `AUTO_APPROVE` env var support for conference mode (pulled forward from Sprint 8 — register_provider reads settings.auto_approve to set status + auto_approved flag)
+- [x] CORS middleware on FastAPI (Vite proxy covers dev, but prod needs it — do it now so it doesn't bite us in Sprint 8)
+- [x] `AUTO_APPROVE` env var support for conference mode (pulled forward from the admin sprint — register_provider reads settings.auto_approve to set status + auto_approved flag)
 
 ---
 
