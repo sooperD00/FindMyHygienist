@@ -122,17 +122,18 @@ ohp-app/
         ├── App.css                     # - [x] Sprint 0: app styles (Vite default, to be replaced)
         ├── index.css                   # - [x] Sprint 0: global styles (Vite default, to be replaced)
         ├── api/
-        │   └── client.ts              # - [x] Sprint 0/3/6: typed API client — CSRF handling, auth endpoints, profile/credential/photo/location wrappers (FormData-aware)
+        │   └── client.ts              # - [x] Sprint 0/3/6/8: typed API client — CSRF handling, auth endpoints, profile/credential/photo/location wrappers (FormData-aware), public profile fetch
         ├── assets/
         │   ├── hero.png               # - [x] Sprint 0: landing page hero image
         │   └── default-avatar.svg     # - [x] Sprint 6: placeholder photo for providers who haven't uploaded one
         ├── contexts/
         │   └── AuthContext.tsx         # - [x] Sprint 3: auth state provider (login/register/logout + GET /me on mount)
         ├── components/
-        │   ├── Layout.tsx             # - [x] Sprint 0/3: shell (nav + footer) with <Outlet />, auth-aware nav links
+        │   ├── Layout.tsx             # - [x] Sprint 0/3/8: shell (nav + footer) with <Outlet />, auth-aware nav links, nav spacing fix
         │   ├── ProtectedRoute.tsx     # - [x] Sprint 3: redirects to /login if not authenticated
         │   ├── AdminRoute.tsx         # - [x] Sprint 3: redirects to / if not role=ADMIN
         │   ├── Accordion.tsx          # - [x] Sprint 6: generic collapsible section (uncontrolled open/close)
+        │   ├── CredentialChip.tsx     # - [x] Sprint 8: tappable credential badge with click-to-reveal patient_description popover
         │   ├── CredentialSelector.tsx  # - [x] Sprint 6: checkbox grid from GET /api/credentials, grouped by type
         │   ├── IntakeProfile.tsx      # - [x] Sprint 6: Step 2 accordion form — 10 sections (photo, bio, credentials, contact, specialties, locations, insurance, languages, availability, tags)
         │   ├── ListInput.tsx          # - [x] Sprint 6: reusable add/remove list for services, specialties, etc.
@@ -141,7 +142,7 @@ ohp-app/
         ├── pages/
         │   ├── Home.tsx               # - [x] Sprint 0: stub
         │   ├── Search.tsx             # - [x] Sprint 0: stub
-        │   ├── Profile.tsx            # - [x] Sprint 0: stub
+        │   ├── Profile.tsx            # - [x] Sprint 0/8: public provider profile — hero, credentials, contact, bio, details, locations, report link
         │   ├── About.tsx              # - [x] Sprint 0: stub
         │   ├── Join.tsx               # - [x] Sprint 3/6: 3-step wizard — account creation, intake profile (IntakeProfile), confirmation
         │   ├── Login.tsx              # - [x] Sprint 3: Login form with auth
@@ -150,7 +151,7 @@ ohp-app/
         │   └── NotFound.tsx           # - [x] Sprint 0: stub
         ├── types/
         │   ├── auth.ts               # - [x] Sprint 3: UserResponse, MeResponse, RegisterRequest, LoginRequest, ProviderType
-        │   └── provider.ts           # - [x] Sprint 6: OwnProfile, ProfileUpdate, Credential, OwnLocation, LocationCreate/Update, PhotoResponse
+        │   └── provider.ts           # - [x] Sprint 6/8: OwnProfile, ProfileUpdate, Credential, OwnLocation, LocationCreate/Update, PhotoResponse, PublicProfile, PublicLocation
         └── __tests__/                 # - [x] Vitest: 76/76 pass
             ├── setup.ts               # - [x] Sprint 3: test setup (jsdom globals)
             ├── client.test.ts         # - [x] Sprint 3: 9 tests — apiFetch, CSRF, auth wrappers
