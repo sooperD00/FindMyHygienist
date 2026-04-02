@@ -6,6 +6,10 @@ OHP is modeled after [Psychology Today's therapist directory](https://www.psycho
 
 This is an Oregon-specific project in partnership with the [Oregon Dental Hygienists' Association](https://www.odha.org/) (ODHA). Free to list through July 2026.
 
+![Provider profile page showing Diana McProvider's listing](docs/ohp-app_profile_diana_mcProvider.PNG)
+
+*Provider profile page — the surface providers will judge the product by at the conference.*
+
 ## Tech Stack
 
 | Layer | Tool |
@@ -147,7 +151,7 @@ ohp-app/
         ├── types/
         │   ├── auth.ts               # - [x] Sprint 3: UserResponse, MeResponse, RegisterRequest, LoginRequest, ProviderType
         │   └── provider.ts           # - [x] Sprint 6: OwnProfile, ProfileUpdate, Credential, OwnLocation, LocationCreate/Update, PhotoResponse
-        └── __tests__/                 # - [x] Vitest: 54/54 pass
+        └── __tests__/                 # - [x] Vitest: 76/76 pass
             ├── setup.ts               # - [x] Sprint 3: test setup (jsdom globals)
             ├── client.test.ts         # - [x] Sprint 3: 9 tests — apiFetch, CSRF, auth wrappers
             └── client-profile.test.ts # - [x] Sprint 6: 17 tests - FormData Content-Type fix (does NOT set application/json), JSON body still gets application/json, all 10 new API wrappers hit correct paths with correct methods/bodies, error handling
@@ -159,6 +163,7 @@ ohp-app/
             ├── LocationEntry.test.tsx  # - [x] Sprint 7: loading→render, add form, submit creates card, delete with window.confirm (4 tests, mocks all 4 location API fns)
             ├── IntakeProfile.test.tsx  # - [x] Sprint 7: loading state, all 10 accordion titles, default-open check, Bio save calls apiUpdateProfile, Done button (4 tests, mocks full API surface)
             ├── Join.test.tsx           # - [x] Sprint 7: Step 1 form renders, logged-in skip to Step 2, registration→Step 2 transition (3 tests, mocks useAuth + API client via vi.hoisted)
+            ├── Profile.test.tsx        # Sprint 8: 22 tests - public profile page — hero, credentials, contact, bio, details, locations, error states
 
 ```
 

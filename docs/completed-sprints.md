@@ -7,6 +7,25 @@
 
 ---
 
+## Sprint 8 — Frontend: Profile Page (Day 15) - DONE 4/2 4:12p
+
+**Goal:** A provider can see how their profile looks publicly. This is the display half of the conference demo surface — the page providers will judge the product by at the conference.
+
+- [x] PublicProfile and PublicLocation TypeScript types in types/provider.ts (frontend currently only has OwnProfile/OwnLocation — the public profile endpoint returns a different shape: no draft, no status, locations have label+city+state only)
+- [x] apiGetPublicProfile wrapper in client.ts
+- [x] Profile page — modeled after PsychologyToday's layout but shorter. Sections: hero (photo + name + credential chips + contact), bio, services/specialties/populations/insurance/tags, practice location(s) with labels, "report an issue" link at bottom
+- [x] Tappable credential chips on profile page — tap/hover shows patient_description from Credential table
+- [x] Photo rendering with default-avatar.svg fallback for providers who haven't uploaded one
+- [x] Nav link spacing fix — Layout.tsx nav links have no gap/margin ("OralHealthProvidersFind a Provider..." runs together). Add flexbox gap or margin to nav links and the logout button.
+- [x] Component tests for Profile page (smoke tests, extends Sprint 7 pattern)
+
+<!-- This is where the design energy goes. Sprint 6 wired the data —
+     this sprint makes it look like a product someone would trust with
+     their professional listing. The profile page is the surface
+     providers will judge the product by at the conference. -->
+
+---
+
 ## Sprint 7 — Component Tests for Sprint 6 (Day 15) - DONE 4/2 1:28p
 
 **Goal:** Test the intake flow components that Sprint 6 built. Extends the Vitest pattern from Sprint 3.
