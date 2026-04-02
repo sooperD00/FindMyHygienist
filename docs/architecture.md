@@ -171,7 +171,7 @@ Seed data (17 entries):
 | `practice_name` | str | Optional — e.g. "Pacific Dental Services" (may differ per location) |
 | `address_line1` | str | |
 | `address_line2` | str | Optional |
-| `city` | str | Nullable, indexed — zip-only private locations may omit (ADR-013; geocoding backfills in Sprint 7) |
+| `city` | str | Nullable, indexed — zip-only private locations may omit (ADR-013; geocoding backfills in Sprint 10) |
 | `state` | str | Always "OR" for now, but don't hardcode (ADR-008) |
 | `zip_code` | str | Indexed |
 | `latitude` | float | For Haversine search |
