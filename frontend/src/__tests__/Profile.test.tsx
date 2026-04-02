@@ -109,13 +109,13 @@ function renderProfile(slug = "ginger-davidson", id = "abc-123") {
  */
 async function renderLoadedProfile(overrides = {}) {
   mockGetPublicProfile.mockResolvedValue({ ...MOCK_PROFILE, ...overrides });
-  renderProfile();
+  const result = renderProfile();
 
   await waitFor(() => {
     expect(screen.getByText("Ginger Davidson")).toBeInTheDocument();
   });
 
-  return userEvent.setup();
+  return { user: userEvent.setup(), container: result.container };
 }
 
 // ── Tests ──────────────────────────────────────────────────────
@@ -162,12 +162,19 @@ describe("Profile page", () => {
     expect(img).toHaveAttribute("src", "/uploads/photos/ginger.jpg");
   });
 
+  /* too broad
   it("renders default avatar when photo_url is null", async () => {
     await renderLoadedProfile({ photo_url: null });
 
     // The placeholder img has aria-hidden="true" and no meaningful alt
-    const placeholder = screen.getByRole("img", { hidden: true });
+    const placeholder = screen.getByRole("img", { hidden: true }); 
     expect(placeholder).toHaveClass("profile-photo-placeholder");
+  });*/
+
+  it("renders default avatar when photo_url is null", async () => {
+    const { container } = await renderLoadedProfile({ photo_url: null });
+    const placeholder = container.querySelector(".profile-photo-placeholder");
+    expect(placeholder).toBeInTheDocument();
   });
 
   it("renders 'Accepting new patients' badge", async () => {
@@ -203,7 +210,7 @@ describe("Profile page", () => {
   });
 
   it("shows credential popover on click", async () => {
-    const user = await renderLoadedProfile();
+    const { user } = await renderLoadedProfile();
 
     await user.click(screen.getByText("EPDH"));
 
@@ -218,7 +225,7 @@ describe("Profile page", () => {
   });
 
   it("closes credential popover on second click", async () => {
-    const user = await renderLoadedProfile();
+    const { user } = await renderLoadedProfile();
 
     await user.click(screen.getByText("EPDH"));
     await waitFor(() => {
@@ -236,7 +243,7 @@ describe("Profile page", () => {
   });
 
   it("closes credential popover on outside click", async () => {
-    const user = await renderLoadedProfile();
+    const { user } = await renderLoadedProfile();
 
     await user.click(screen.getByText("EPDH"));
     await waitFor(() => {
