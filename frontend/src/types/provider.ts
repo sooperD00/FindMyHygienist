@@ -130,3 +130,45 @@ export interface ProfileUpdate {
 export interface PhotoResponse {
   photo_url: string | null;
 }
+
+// ── Public-facing types (no auth needed) ─────────────────────────
+//    These mirror PublicProfileResponse / PublicLocationResponse
+//    from routes/profile.py and routes/locations.py. The public
+//    endpoint strips draft, status, admin metadata, and full
+//    address details from locations.
+
+export interface PublicLocation {
+  id: string;
+  label: string;
+  practice_name: string | null;
+  city: string | null;
+  state: string;
+  is_primary: boolean;
+}
+
+export interface PublicProfile {
+  id: string;
+  display_name: string;
+  slug: string;
+  provider_type: string;
+  title_line: string | null;
+  bio: string | null;
+  mission_statement: string | null;
+  photo_url: string | null;
+  phone: string | null;
+  public_email: string | null;
+  website: string | null;
+  languages: string[] | null;
+  services: string[] | null;
+  specialties: string[] | null;
+  populations_served: string[] | null;
+  insurance_accepted: string[] | null;
+  tags: string[] | null;
+  availability: Availability | null;
+  accepting_new_patients: boolean;
+  max_travel_miles: number | null;
+  accepts_texts: boolean;
+  accepts_calls: boolean;
+  credentials: Credential[];
+  locations: PublicLocation[];
+}

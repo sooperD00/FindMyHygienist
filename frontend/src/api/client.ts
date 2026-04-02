@@ -24,6 +24,7 @@ import type {
   OwnProfile,
   PhotoResponse,
   ProfileUpdate,
+  PublicProfile,
 } from "../types/provider";
 
 const API_BASE = "/api";
@@ -140,6 +141,16 @@ export async function fetchHealth(): Promise<{ status: string }> {
 
 export async function apiGetCredentials(): Promise<Credential[]> {
   const res = await apiFetch("/credentials");
+  return res.json();
+}
+
+// ── Public provider profile ──────────────────────────────────────
+
+export async function apiGetPublicProfile(
+  slug: string,
+  id: string
+): Promise<PublicProfile> {
+  const res = await apiFetch(`/providers/${slug}/${id}`);
   return res.json();
 }
 
