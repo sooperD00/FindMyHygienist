@@ -66,7 +66,9 @@ class MeResponse(BaseModel):
 def _set_session_cookies(response: Response, session) -> None:
     """Set both session_id (HTTP-only) and csrf_token (JS-readable)."""
     secure = not settings.debug
-    samesite = "lax"
+    # Cross-origin cookies (prod) require SameSite=None + Secure.
+    # Same-origin (local dev via Vite proxy) uses Lax.
+    samesite = "none" if secure else "lax"  # none is ok, you have csrf token pattern
     max_age = settings.session_lifetime_hours * 3600
 
     response.set_cookie(

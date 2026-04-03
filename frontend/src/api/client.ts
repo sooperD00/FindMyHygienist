@@ -87,7 +87,7 @@ export async function apiFetch(
     ...options,
     method,
     headers,
-    credentials: "same-origin", // send cookies (session_id + csrf_token)
+    credentials: "include", // send cookies (session_id + csrf_token), allow cross-site (protected by token)
   });
 
   if (!res.ok) {
