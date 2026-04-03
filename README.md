@@ -128,6 +128,8 @@ ohp-app/
         │   └── default-avatar.svg     # - [x] Sprint 6: placeholder photo for providers who haven't uploaded one
         ├── contexts/
         │   └── AuthContext.tsx         # - [x] Sprint 3: auth state provider (login/register/logout + GET /me on mount)
+        ├── hooks/
+        │   └── useSaveState.ts        # - [x] Sprint 9: shared save/error/idle state machine (extracted from IntakeProfile)
         ├── components/
         │   ├── Layout.tsx             # - [x] Sprint 0/3/8: shell (nav + footer) with <Outlet />, auth-aware nav links, nav spacing fix
         │   ├── ProtectedRoute.tsx     # - [x] Sprint 3: redirects to /login if not authenticated
@@ -135,10 +137,12 @@ ohp-app/
         │   ├── Accordion.tsx          # - [x] Sprint 6: generic collapsible section (uncontrolled open/close)
         │   ├── CredentialChip.tsx     # - [x] Sprint 8: tappable credential badge with click-to-reveal patient_description popover
         │   ├── CredentialSelector.tsx  # - [x] Sprint 6: checkbox grid from GET /api/credentials, grouped by type
-        │   ├── IntakeProfile.tsx      # - [x] Sprint 6: Step 2 accordion form — 10 sections (photo, bio, credentials, contact, specialties, locations, insurance, languages, availability, tags)
+        │   ├── IntakeProfile.tsx      # - [x] Sprint 6/9: thin wrapper — loads profile, passes to ProfileEditor. (Sprint 9 extracted form logic to ProfileEditor.tsx)
         │   ├── ListInput.tsx          # - [x] Sprint 6: reusable add/remove list for services, specialties, etc.
-        │   ├── LocationEntry.tsx      # - [x] Sprint 6: location CRUD — add/toggle is_public/delete, ADR-013 guided UX
-        │   └── PhotoUpload.tsx        # - [x] Sprint 6: profile photo upload/delete with preview
+        │   ├── LocationEntry.tsx      # - [x] Sprint 6/9: location CRUD — add/toggle is_public/delete, ADR-013 guided UX, inline edit mode (Sprint 9)
+        │   ├── PhotoUpload.tsx        # - [x] Sprint 6: profile photo upload/delete with preview
+        │   ├── ProfileEditor.tsx      # - [x] Sprint 9: 10-section accordion form (photo, bio, credentials, contact, specialties, locations, insurance, languages, availability, tags) — reused by IntakeProfile and Dashboard
+        │   └── SaveButton.tsx         # - [x] Sprint 9: shared save/error button wired to useSaveState
         ├── pages/
         │   ├── Home.tsx               # - [x] Sprint 0: stub
         │   ├── Search.tsx             # - [x] Sprint 0: stub
@@ -146,7 +150,7 @@ ohp-app/
         │   ├── About.tsx              # - [x] Sprint 0: stub
         │   ├── Join.tsx               # - [x] Sprint 3/6: 3-step wizard — account creation, intake profile (IntakeProfile), confirmation
         │   ├── Login.tsx              # - [x] Sprint 3: Login form with auth
-        │   ├── Dashboard.tsx          # - [x] Sprint 3: stub with auth
+        │   ├── Dashboard.tsx          # - [x] Sprint 3/9: provider dashboard — own profile as it appears publicly, ProfileEditor for editing, status badge (PENDING/APPROVED/SUSPENDED)
         │   ├── Admin.tsx              # - [x] Sprint 3: stub with auth
         │   └── NotFound.tsx           # - [x] Sprint 0: stub
         ├── types/
@@ -161,10 +165,11 @@ ohp-app/
             ├── ListInput.test.tsx      # - [x] Sprint 7: add via click and Enter, remove chip, case-insensitive dedup, empty state (5 tests)
             ├── CredentialSelector.test.tsx  # - [x] Sprint 7: loading state, grouped fieldsets, check/uncheck toggle (4 tests, mocks apiGetCredentials)
             ├── PhotoUpload.test.tsx    # - [x] Sprint 7: no-photo vs has-photo states, upload flow, delete flow (4 tests, mocks apiUploadPhoto/apiDeletePhoto)
-            ├── LocationEntry.test.tsx  # - [x] Sprint 7: loading→render, add form, submit creates card, delete with window.confirm (4 tests, mocks all 4 location API fns)
+            ├── LocationEntry.test.tsx  # - [x] Sprint 7/9: loading→render, add form, submit creates card, delete with window.confirm, edit button, edit form, edit save, edit cancel (8 tests, mocks all 4 location API fns)
             ├── IntakeProfile.test.tsx  # - [x] Sprint 7: loading state, all 10 accordion titles, default-open check, Bio save calls apiUpdateProfile, Done button (4 tests, mocks full API surface)
             ├── Join.test.tsx           # - [x] Sprint 7: Step 1 form renders, logged-in skip to Step 2, registration→Step 2 transition (3 tests, mocks useAuth + API client via vi.hoisted)
             ├── Profile.test.tsx        # Sprint 8: 22 tests - public profile page — hero, credentials, contact, bio, details, locations, error states
+            ├── Dashboard.test.tsx      # - [x] Sprint 9: 13 tests — dashboard layout, status badge, ProfileEditor integration, edit mode, compact summary
 
 ```
 
