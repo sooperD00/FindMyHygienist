@@ -1,6 +1,12 @@
 # === For the Dev ===
 DEVLOG
+
+# env
 .env
+!.env.example
+!.env.*.example
+
+# tests and cache
 backend/tests/results*.txt
 __pycache__/
 .pytest_cache/
