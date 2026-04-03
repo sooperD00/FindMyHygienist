@@ -7,6 +7,22 @@
 
 ---
 
+## Sprint 9 — Frontend: Dashboard (Day 15) - DONE 4/2 10:32p
+
+**Goal:** A provider can manage their profile from a dashboard. The read-write counterpart to Sprint 8's read-only profile page.
+
+- [x] Dashboard — provider sees their own profile as it appears publicly, edit profile fields, manage locations, plus their status (PENDING/APPROVED/SUSPENDED)
+- [x] LocationEntry inline edit mode — Sprint 6 only has toggle is_public and delete; providers can't edit address fields on existing locations without deleting and re-adding. Add edit mode now that Dashboard gets the full profile editor.
+- [x] Extract useSaveState hook to shared hooks/ directory if Dashboard reuses IntakeProfile's per-section save pattern (currently local to IntakeProfile.tsx)
+- [x] Component tests for Dashboard (smoke tests, extends Sprint 7 pattern)
+
+<!-- Dashboard is the surface that makes providers feel in control of
+     their listing. It needs to show what patients see AND let the
+     provider change it. The big design question: does it reuse
+     IntakeProfile's accordion layout or build a different editor? -->
+
+---
+
 ## Sprint 8 — Frontend: Profile Page (Day 15) - DONE 4/2 4:12p
 
 **Goal:** A provider can see how their profile looks publicly. This is the display half of the conference demo surface — the page providers will judge the product by at the conference.

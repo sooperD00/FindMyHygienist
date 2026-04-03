@@ -152,7 +152,7 @@ ohp-app/
         ├── types/
         │   ├── auth.ts               # - [x] Sprint 3: UserResponse, MeResponse, RegisterRequest, LoginRequest, ProviderType
         │   └── provider.ts           # - [x] Sprint 6/8: OwnProfile, ProfileUpdate, Credential, OwnLocation, LocationCreate/Update, PhotoResponse, PublicProfile, PublicLocation
-        └── __tests__/                 # - [x] Vitest: 76/76 pass
+        └── __tests__/                 # - [x] Vitest: 93/93 pass
             ├── setup.ts               # - [x] Sprint 3: test setup (jsdom globals)
             ├── client.test.ts         # - [x] Sprint 3: 9 tests — apiFetch, CSRF, auth wrappers
             └── client-profile.test.ts # - [x] Sprint 6: 17 tests - FormData Content-Type fix (does NOT set application/json), JSON body still gets application/json, all 10 new API wrappers hit correct paths with correct methods/bodies, error handling
