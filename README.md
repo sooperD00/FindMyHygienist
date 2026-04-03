@@ -1,10 +1,10 @@
-# OHP — Oral Health Providers
+# FindMyHygienist
 
-**A directory for Oregon's oral health providers, built so the people who take care of your teeth can show you who they are.**
+**A directory for Oregon's dental hygienists and other oral healthcare providers, built so the people who take care of your teeth can show you who they are.**
 
-OHP is modeled after [Psychology Today's therapist directory](https://www.psychologytoday.com/us/therapists) — a searchable, browsable listing where dental hygienists and other oral health providers create profiles, share their credentials, and connect with patients who need them. Providers sign up, tell their story, and go live. Patients search by location, filter by what matters to them, and find someone nearby.
+FindMyHygienist is modeled after [Psychology Today's therapist directory](https://www.psychologytoday.com/us/therapists) — a searchable, browsable listing where dental hygienists and other providers create profiles, share their credentials, and connect with patients who need them. Providers sign up, tell their story, and go live. Patients search by location or by what matters to them — "my kids are afraid of the dentist," "Spanish-speaking," "accepts OHP" — and browse profiles to find patient-centered care that makes them feel safe, respected, and cared for — the kind of care hygienists strive to provide but patients don’t always know how to find.
 
-This is an Oregon-specific project in partnership with the [Oregon Dental Hygienists' Association](https://www.odha.org/) (ODHA). Free to list through July 2026.
+This is an Oregon-specific project in partnership with the [Oregon Dental Hygienists' Association](https://www.odha.org/) (ODHA). Free to list through July 2026. $15/month after that. Search is always free.
 
 ![Provider profile page showing Diana McProvider's listing](docs/ohp-app_profile_diana_mcProvider.PNG)
 

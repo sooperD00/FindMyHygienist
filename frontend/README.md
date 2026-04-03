@@ -1,6 +1,6 @@
-# OHP Frontend
+# FindMyHygienist Frontend
 
-React + TypeScript + Vite. Scaffolded from `create-vite` with the `react-ts` template, then customized for OHP.
+React + TypeScript + Vite. Scaffolded from `create-vite` with the `react-ts` template, then customized for FindMyHygienist.
 
 ## Dev
 

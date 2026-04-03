@@ -5,7 +5,7 @@ function Search() {
 
   return (
     <div>
-      <h1>Oral Health Providers in {city}</h1>
+      <h1>Hygienists & providers in {city}</h1>
       {/* TODO: Educational triage stub text */}
       {/* TODO: Filters — provider type, specialty, keyword search */}
       {/* TODO: 3 truncated provider bios above the fold */}

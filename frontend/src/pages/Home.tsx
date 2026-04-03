@@ -1,8 +1,8 @@
 function Home() {
   return (
     <div>
-      <h1>Find an Oral Health Provider in Oregon</h1>
-      <p>Search by city or zip code to find dental hygienists and other oral health providers near you.</p>
+      <h1>Find Your Hygienist in Oregon</h1>
+      <p>Search by city or zip to find hygienists and other providers near you.</p>
       {/* TODO: Search bar that redirects to /providers/or/:city */}
     </div>
   );

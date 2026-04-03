@@ -124,7 +124,7 @@ async def authenticate_user(
     """Verify email + password. Returns User if valid, None otherwise.
 
     Spends time hashing a dummy password on user-not-found so response
-    time doesn't reveal whether the email exists. Not critical at OHP's
+    time doesn't reveal whether the email exists. Not critical at FindMyHygienist's
     scale, but it's free.
     """
     user = await get_user_by_email(db, email)

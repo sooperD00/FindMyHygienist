@@ -1,5 +1,5 @@
 """
-Enum definitions for the OHP data model.
+Enum definitions for the FindMyHygienist data model.
 
 These are plain Python enums used as column types via SQLAlchemy's
 Enum() type. SQLModel handles the mapping — the DB column stores the

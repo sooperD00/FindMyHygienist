@@ -1,8 +1,8 @@
 # Architecture
 
-## What OHP Does
+## What FindMyHygienist Does
 
-OHP is a provider directory. Two audiences use it in two different ways:
+FindMyHygienist is a provider directory. Two audiences use it in two different ways:
 
 1. **Patients** (anonymous, no account needed) browse the directory — search by city/zip, filter by provider type or specialty, read profiles, find contact info.
 2. **Providers** (authenticated) sign up, build a profile, upload a photo, and manage their listing over time.
@@ -265,7 +265,7 @@ Seed data (17 entries):
 | `/` | Landing / Search | Could be a landing page with search bar that redirects to `/providers/or/:city`, or could go straight to the search page. Decide in sprint. |
 | `/providers/or/:city` | Search Results | Modeled after PsychologyToday's city search. 3 truncated bios above the fold, photo + name + credentials + truncated bio + contact. Filters at top. Keyword search. "List with us" CTA. Educational triage stub text. |
 | `/providers/:slug/:id` | Provider Profile | Full profile page. Bio, credentials, services, specialties, populations, locations with map, contact info. "Report an issue" link at bottom. |
-| `/about` | About / Education | What OHP is, what different provider types do, FAQ, educational triage content. |
+| `/about` | About / Education | What FindMyHygienist is, what different provider types do, FAQ, educational triage content. |
 | `/join` | Provider Signup | Intake form — account creation + initial profile all in one flow. |
 | `/login` | Provider Login | |
 

@@ -7,7 +7,7 @@ model means a session exists if and only if the user is logged in.
 
 Expired sessions are cleaned up lazily: get_session checks expiry and
 deletes stale rows on read. A periodic cleanup can be added later if
-the table grows, but at OHP's scale it won't.
+the table grows, but at FindMyHygienist's scale it won't.
 """
 
 import secrets

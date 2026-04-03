@@ -254,7 +254,7 @@ describe("Dashboard page", () => {
   /* ── Admin user ──────────────────────────────────────────── */
 
   it("shows admin redirect message for ADMIN role", () => {
-    currentMockUser = { id: "admin-1", email: "admin@ohp.org", role: "ADMIN" };
+    currentMockUser = { id: "admin-1", email: "admin@findmyhygienist.org", role: "ADMIN" };
     renderDashboard();
 
     expect(screen.getByText(/logged in as an admin/i)).toBeInTheDocument();

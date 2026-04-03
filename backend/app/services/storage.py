@@ -6,7 +6,7 @@ Sprint 12 adds S3StorageBackend (boto3) — same interface, swap one
 dependency, zero caller changes. See ADR-005.
 
 LocalStorageBackend uses synchronous file I/O (Path.write_bytes).
-At OHP's scale and file sizes (≤5MB photos), blocking the event loop
+At FindMyHygienist's scale and file sizes (≤5MB photos), blocking the event loop
 for a few ms is fine for a dev stub that gets replaced in production.
 """
 

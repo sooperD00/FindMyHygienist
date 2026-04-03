@@ -26,7 +26,7 @@ function Layout() {
   return (
     <div>
       <nav className="site-nav">
-        <Link to="/" className="site-nav-brand">OralHealthProviders</Link>
+        <Link to="/" className="site-nav-brand">FindMyHygienist</Link>
         <div className="site-nav-links">
           <Link to="/providers/or/portland">Find a Provider</Link>
           <Link to="/about">About</Link>
@@ -58,7 +58,7 @@ function Layout() {
       </main>
       <footer>
         <p>
-          © 2026 Oral Health Providers · <Link to="/about">About</Link> ·{" "}
+          © 2026 FindMyHygienist · <Link to="/about">About</Link> ·{" "}
           <a href={`mailto:${import.meta.env.VITE_SUPPORT_EMAIL}`}>Give Us Feedback</a>
         </p>
       </footer>

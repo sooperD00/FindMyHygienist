@@ -5,7 +5,7 @@
 **Date:** 2026-03-19
 **Status:** Accepted
 
-**Context:** OHP has a React/TypeScript frontend and a FastAPI/Python backend. We could use separate repos or a monorepo.
+**Context:** FindMyHygienist has a React/TypeScript frontend and a FastAPI/Python backend. We could use separate repos or a monorepo.
 
 **Decision:** Monorepo. `frontend/` and `backend/` at the root.
 
@@ -55,12 +55,12 @@
 - **Cross-state coverage for free.** A hygienist in Vancouver, WA (zip 98660) who travels to Portland is a real use case. Nominatim geocodes any US zip — no guessing which border zips to include. The `max_travel_miles` field does the geographic filtering; the geocoder just needs to resolve the starting point.
 - **Already proven.** ORToothFairy's `GeocodingService` + `SearchService` + `SearchController` are ~170 lines of C# that translate to ~100 lines of Python. Nicole wrote this code and understands every piece. The port is a translation exercise, not a design exercise.
 - **Zero maintenance.** No JSON file of ~900 rows to source, validate, and keep current. Oregon occasionally adds or renames zip codes; Nominatim handles that upstream.
-- **Haversine in application code, not SQL.** At OHP's scale (hundreds of providers, not millions), loading approved providers and calculating distances in Python is fast, testable, and readable. No PostGIS, no complex SQL, no mixing business logic into queries. If scale ever demands it, a bounding-box pre-filter in the SQL query is a simple optimization that doesn't change the architecture.
+- **Haversine in application code, not SQL.** At FindMyHygienist's scale (hundreds of providers, not millions), loading approved providers and calculating distances in Python is fast, testable, and readable. No PostGIS, no complex SQL, no mixing business logic into queries. If scale ever demands it, a bounding-box pre-filter in the SQL query is a simple optimization that doesn't change the architecture.
 
 **Tradeoffs accepted:**
 
-- **Runtime dependency.** Nominatim is an external HTTP call (~200–500ms per geocode). If it's down, zip/address search fails (lat/lng search still works since it skips geocoding). At OHP's scale and audience, this is acceptable — patients search from home on normal internet, not from a conference booth on flaky wifi. If Nominatim reliability ever becomes a problem, a caching layer or static fallback table can be added without changing the API contract.
-- **Rate limiting.** Nominatim's usage policy asks for max 1 request/second and a descriptive User-Agent header. OHP's search volume (single-digit QPS at peak) is well within this. The `User-Agent` header is already set in the ORToothFairy implementation.
+- **Runtime dependency.** Nominatim is an external HTTP call (~200–500ms per geocode). If it's down, zip/address search fails (lat/lng search still works since it skips geocoding). At FindMyHygienist's scale and audience, this is acceptable — patients search from home on normal internet, not from a conference booth on flaky wifi. If Nominatim reliability ever becomes a problem, a caching layer or static fallback table can be added without changing the API contract.
+- **Rate limiting.** Nominatim's usage policy asks for max 1 request/second and a descriptive User-Agent header. FindMyHygienist's search volume (single-digit QPS at peak) is well within this. The `User-Agent` header is already set in the ORToothFairy implementation.
 - **No autocomplete.** Nominatim's free API doesn't power a type-ahead search box. For MVP, the user types a zip or city and hits search. Autocomplete is a post-conference enhancement if needed (Mapbox or Google Places).
 
 **What this changes in the sprint plan:**
@@ -101,7 +101,7 @@
 
 **Alternatives considered:**
 
-- **JWT (access token + refresh token):** The FastAPI ecosystem's default path — more tutorials, built-in `OAuth2PasswordBearer` support, `python-jose` does the heavy lifting. But JWTs are valid until they expire regardless of logout. Real logout requires a revoked-tokens blacklist table that grows monotonically and needs periodic cleanup. The blacklist approach inverts the logic: tokens are valid by default, the table exists to say "except this one." At OHP's scale (dozens of providers, one backend server) the statelessness benefit is irrelevant, and the cleanup burden is a worse tradeoff than writing ~60–80 lines of session middleware without ecosystem handholding. **Fallback plan:** if session-based auth hits a wall during implementation, revert to the Sprint 1 tag and re-attempt with JWT. The User model, password hashing (argon2id, ADR-011), and registration flow are identical either way — only the session/token layer changes.
+- **JWT (access token + refresh token):** The FastAPI ecosystem's default path — more tutorials, built-in `OAuth2PasswordBearer` support, `python-jose` does the heavy lifting. But JWTs are valid until they expire regardless of logout. Real logout requires a revoked-tokens blacklist table that grows monotonically and needs periodic cleanup. The blacklist approach inverts the logic: tokens are valid by default, the table exists to say "except this one." At FindMyHygienist's scale (dozens of providers, one backend server) the statelessness benefit is irrelevant, and the cleanup burden is a worse tradeoff than writing ~60–80 lines of session middleware without ecosystem handholding. **Fallback plan:** if session-based auth hits a wall during implementation, revert to the Sprint 1 tag and re-attempt with JWT. The User model, password hashing (argon2id, ADR-011), and registration flow are identical either way — only the session/token layer changes.
 
 - **Third-party auth (Auth0, Clerk, Supabase Auth):** Least application code, most features for free (password reset, email verification, brute-force protection). But the User table becomes a shadow copy of an external record, registration requires syncing two sources of truth via webhooks, and every auth operation adds a network hop to a third party. At the ODHA conference, a provider standing at the signup booth can't wait for Auth0's webhook on conference wifi. The features these services provide for free (password reset, email verification) are explicitly post-conference backlog. **Fallback plan:** available as a last resort if both session-based and JWT approaches fail, but this is unlikely.
 
@@ -116,7 +116,7 @@
 **Date:** 2026-03-19
 **Status:** Accepted
 
-**Context:** ApplicationPipeline's frontend used JavaScript/React. OHP is a chance to level up.
+**Context:** ApplicationPipeline's frontend used JavaScript/React. FindMyHygienist is a chance to level up.
 
 **Decision:** TypeScript for the frontend. React + TypeScript + Vite.
 
@@ -129,7 +129,7 @@
 **Date:** 2026-03-19
 **Status:** Accepted
 
-**Context:** OHP launches in Oregon. Could it expand to other states?
+**Context:** FindMyHygienist launches in Oregon. Could it expand to other states?
 
 **Decision:** Ship Oregon-only. But keep `state` as a field on provider locations rather than hardcoding "OR" everywhere. URL structure uses `/providers/or/:city` (state in the path). Search defaults to Oregon but the data model doesn't prevent other states.
 

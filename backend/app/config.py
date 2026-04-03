@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     photo_upload_dir: str = Field(default="./uploads")
 
     # Comma-separated allowed origins for CORS, e.g.
-    # "http://localhost:5173,https://oralhealthproviders.org"
+    # "http://localhost:5173,https://findmyhygienist.org"
     # Empty string = CORS middleware not added (Vite proxy handles dev).
     cors_origins: str = Field(default="")
 
