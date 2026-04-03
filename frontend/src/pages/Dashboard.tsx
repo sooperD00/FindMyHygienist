@@ -131,6 +131,13 @@ export default function Dashboard() {
             View my public profile →
           </Link>
         )}
+        {profile.status === "APPROVED" && profile.draft && (
+          <p className="dashboard-draft-note">
+            Some changes are pending admin review and aren't visible on
+            your public profile yet. Your edits are saved — they'll go
+            live once approved.
+          </p>
+        )}
       </div>
 
       {/* ── Compact summary ────────────────────────────────── */}

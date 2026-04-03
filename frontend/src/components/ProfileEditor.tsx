@@ -39,7 +39,7 @@ const AVAILABILITY_OPTIONS: { value: Availability; label: string }[] = [
   { value: "BOTH", label: "Both" },
 ];
 
-const TRAVEL_MILE_OPTIONS = [5, 10, 25, 50, 100];
+const TRAVEL_MILE_OPTIONS = [5, 10, 15, 25, 50, 75, 100];
 
 // ── Props ─────────────────────────────────────────────────────────
 
@@ -58,44 +58,72 @@ export default function ProfileEditor({
   defaultOpenSections = new Set(),
   showDisplayName = false,
 }: ProfileEditorProps) {
-  // Per-field form state, initialized from the profile prop
-  const [displayName, setDisplayName] = useState(profile.display_name || "");
-  const [titleLine, setTitleLine] = useState(profile.title_line || "");
-  const [bio, setBio] = useState(profile.bio || "");
-  const [missionStatement, setMissionStatement] = useState(
-    profile.mission_statement || ""
+  // Merge draft on top of live fields so APPROVED providers see what
+  // they actually saved, not stale live values. The draft column holds
+  // pending edits as a flat JSON object with the same field names as
+  // the live columns (e.g. { title_line: "...", bio: "..." }).
+  // PENDING providers have no draft, so `merged` === `profile`.
+  const draft = (profile.draft ?? {}) as Record<string, unknown>;
+  const m = (key: string) => draft[key] ?? undefined; // draft field or undefined (fall through to live)
+
+  // Per-field form state, initialized from draft (if present) then live
+  const [displayName, setDisplayName] = useState(
+    (m("display_name") as string | undefined) ?? profile.display_name ?? ""
   );
-  const [phone, setPhone] = useState(profile.phone || "");
-  const [publicEmail, setPublicEmail] = useState(profile.public_email || "");
-  const [website, setWebsite] = useState(profile.website || "");
+  const [titleLine, setTitleLine] = useState(
+    (m("title_line") as string | undefined) ?? profile.title_line ?? ""
+  );
+  const [bio, setBio] = useState(
+    (m("bio") as string | undefined) ?? profile.bio ?? ""
+  );
+  const [missionStatement, setMissionStatement] = useState(
+    (m("mission_statement") as string | undefined) ?? profile.mission_statement ?? ""
+  );
+  const [phone, setPhone] = useState(
+    (m("phone") as string | undefined) ?? profile.phone ?? ""
+  );
+  const [publicEmail, setPublicEmail] = useState(
+    (m("public_email") as string | undefined) ?? profile.public_email ?? ""
+  );
+  const [website, setWebsite] = useState(
+    (m("website") as string | undefined) ?? profile.website ?? ""
+  );
   const [credentialCodes, setCredentialCodes] = useState<string[]>(
     profile.credentials.map((c) => c.code)
   );
-  const [services, setServices] = useState<string[]>(profile.services || []);
+  const [services, setServices] = useState<string[]>(
+    (m("services") as string[] | undefined) ?? profile.services ?? []
+  );
   const [specialties, setSpecialties] = useState<string[]>(
-    profile.specialties || []
+    (m("specialties") as string[] | undefined) ?? profile.specialties ?? []
   );
   const [populationsServed, setPopulationsServed] = useState<string[]>(
-    profile.populations_served || []
+    (m("populations_served") as string[] | undefined) ?? profile.populations_served ?? []
   );
   const [insuranceAccepted, setInsuranceAccepted] = useState<string[]>(
-    profile.insurance_accepted || []
+    (m("insurance_accepted") as string[] | undefined) ?? profile.insurance_accepted ?? []
   );
   const [languages, setLanguages] = useState<string[]>(
-    profile.languages || []
+    (m("languages") as string[] | undefined) ?? profile.languages ?? []
   );
-  const [tags, setTags] = useState<string[]>(profile.tags || []);
+  const [tags, setTags] = useState<string[]>(
+    (m("tags") as string[] | undefined) ?? profile.tags ?? []
+  );
   const [availability, setAvailability] = useState<Availability | null>(
-    profile.availability
+    (m("availability") as Availability | undefined) ?? profile.availability
   );
   const [acceptingNew, setAcceptingNew] = useState(
-    profile.accepting_new_patients
+    (m("accepting_new_patients") as boolean | undefined) ?? profile.accepting_new_patients
   );
   const [maxTravel, setMaxTravel] = useState<number | null>(
-    profile.max_travel_miles
+    (m("max_travel_miles") as number | undefined) ?? profile.max_travel_miles
   );
-  const [acceptsTexts, setAcceptsTexts] = useState(profile.accepts_texts);
-  const [acceptsCalls, setAcceptsCalls] = useState(profile.accepts_calls);
+  const [acceptsTexts, setAcceptsTexts] = useState(
+    (m("accepts_texts") as boolean | undefined) ?? profile.accepts_texts
+  );
+  const [acceptsCalls, setAcceptsCalls] = useState(
+    (m("accepts_calls") as boolean | undefined) ?? profile.accepts_calls
+  );
   const [photoUrl, setPhotoUrl] = useState<string | null>(profile.photo_url);
 
   // Per-section save states

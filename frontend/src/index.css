@@ -1189,6 +1189,13 @@ textarea:focus {
   text-decoration: underline;
 }
 
+.dashboard-draft-note {
+  margin-top: 8px;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text);
+}
+
 /* -- Compact summary -- */
 
 .dashboard-summary {
