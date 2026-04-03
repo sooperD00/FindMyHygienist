@@ -426,3 +426,134 @@ The `is_public` checkbox should use friendlier copy than "is_public" — somethi
 - Profiles will be sparse initially. Search/matching quality depends on how many providers fill out specialties and locations later. Dashboard progress bar is the gentle nudge.
 - Accordion label copy is doing real work (UI affordance + sales copy). Worth spending time on wording.
 - Dashboard must include profile editing flow so providers can come back and fill in what they skipped.
+
+---
+
+## ADR-015: Patient-facing search — two tracks: categorized tag browsing + full-text search
+
+**Date:** 2026-04-03
+**Status:** Accepted
+
+**Context:** FindMyHygienist needs a patient-facing search that surfaces providers based on what makes them special — the bios, tags, credentials, and comfort markers that providers asked for in focus group #1 (12/18/24). The focus group's core request was "let patients find me for what I actually offer," which means the tags ("anxiety aware," "judgment-free," "LGBT sensitive") need to be browsable, not just stored. Full-text search over bios and mission statements is valuable too, but requires content — and profiles will be sparse at first. Both approaches are planned; they compose together.
+
+**Decision:** Two parallel search tracks, prioritized by what works with sparse data. Both compose with distance/location filtering and accepting_new_patients. Both are designed now; both ship based on available time before the conference.
+
+**Track 1 (priority): Filter-driven search with categorized tag browsing**
+
+Works even when providers have filled out only tags and credentials — the conference-booth minimum.
+
+- **`tag_categories` reference table:** `code` (PK), `display_name`, `sort_order`. 4–6 patient-facing categories: Comfort & Approach, Populations Served, Services, Languages, etc. Curated by Nicole — same pattern as the credentials reference table (ADR-010).
+- **`tag_to_category` lookup table:** `tag_text`, `category_code` (FK). Maps each provider tag to a category. Tags without a mapping go into an "Other" bucket. Initial seed is a best-guess from focus group data and the ORToothFairy prototype; refined after real provider data exists.
+- **Search page UX:** Category headers, tappable chips within each. Patients scan the category that matches their concern, tap chips to filter. Multiple selections supported (AND within a category, OR across categories — or start with AND everywhere and see if it's too restrictive). No typing required, no blank-page problem, no need for patients to guess vocabulary.
+- **Filter composition:** Tag chip selections compose with credential filter, distance/location, and accepting_new_patients as AND clauses. A patient who taps "anxiety aware" + "pediatric" + selects "within 25 miles" gets providers matching all three.
+
+<!-- The tag list is self-curating — only tags that at least one approved
+     provider has actually used will appear as chips. Sort chips within
+     each category by frequency (most providers first) so the popular
+     ones float to the top. At launch scale this is fine; if the tag
+     universe explodes post-conference, add a "show more" cutoff per
+     category. -->
+
+**Track 2: Full-text search over provider content**
+
+Becomes more valuable as providers flesh out bios and mission statements.
+
+- **Text search column:** Generated `tsvector` column on the provider table built from `bio || ' ' || headline || ' ' || mission_statement`. GIN index. `ts_rank` for result ordering.
+- **Tag inclusion in tsvector:** Include the tag array (cast to text) in the tsvector so full-text search matches against tags as well as free text. A patient typing "anxiety" hits both the bio and the "anxiety aware" tag.
+- **`pg_trgm` extension:** Trigram similarity for fuzzy matching (typos, partial words). Ships with Postgres, just needs `CREATE EXTENSION`.
+- **Compose with tag browsing:** Text search results are AND-composed with any active tag/credential/distance filters. The search box enhances the chips, doesn't replace them.
+
+<!-- Full-text search won't understand that "I'm embarrassed I haven't
+     been to the dentist" should match a provider whose bio says "gentle,
+     non-judgmental approach." That's the gap ADR-016 closes over time
+     by enriching provider tags from search log analysis. If tsvector
+     proves inadequate even with enriched tags, pgvector embeddings are
+     the next step — but that's a new ADR, not a revision of this one. -->
+
+**Search log table (ships with whichever track lands first):**
+
+Every search is logged regardless of search mode: `search_id` (PK), `query_text` (nullable — null for filter-only searches), `filters_applied` (JSONB — tags selected, credentials, distance, etc.), `result_provider_ids` (integer array), `result_count`, `created_at`. This table serves three purposes:
+
+1. **ADR-016 input.** The batch tag suggestion pipeline reads this table to find gaps between what patients look for and what providers list.
+2. **Product analytics.** Top tag combinations, zero-result filters, and filter-to-profile-click conversion tell us what patients want and what the directory is missing.
+3. **Partnership data.** "Here's what Oregonians look for in a dental hygienist" is a slide for ODHA that nobody else can make.
+
+<!-- No PII in the search log. Logs what was searched, not who searched.
+     No patient accounts, no IP logging. If we ever add patient accounts,
+     the search log stays anonymous. -->
+
+**Rationale:**
+
+- **Tag browsing works with sparse data.** At the conference, most providers will have tags and credentials but minimal bios. Categorized chips surface what exists. Full-text search becomes more valuable as profiles fill out — they complement each other.
+- **Both compose with the same distance/filter infrastructure.** The core search endpoint (Haversine, provider_type, accepting_new_patients) is shared. Tag filtering and text search are additive WHERE clauses, not separate code paths.
+- **Zero marginal cost for both.** Tag filtering is a WHERE clause. tsvector + GIN is built into Postgres. No LLM calls, no embedding API, no external search service.
+- **Category curation is small and valuable work.** At launch with a few dozen providers, the tag universe is manageable. Nicole maintains the `tag_to_category` mapping manually — same as the credentials reference table. When ADR-016's batch pipeline starts suggesting new tags, those suggestions can include a proposed category.
+- **Search log starts collecting from day one.** Whichever track ships first, the log captures what patients search for. This feeds ADR-016 and product decisions regardless of which search features are live.
+
+**Alternatives considered:**
+
+- **LLM per query (Claude as search engine):** Best possible matching quality. But at ~$0.01–0.05 per search with zero revenue and unknown query volume, this is a cost bomb with no cap. Revisit when there's a paid tier. (See ADR-016 for the batch alternative that gets 80% of the benefit at 1% of the cost.)
+- **Embeddings + vector similarity (pgvector):** Better semantic matching than tsvector, still cheap per query. But it's a new dependency (pgvector extension, embedding model, API key), and the corpus at launch is too sparse for embeddings to outperform tag filtering. If full-text search proves inadequate and ADR-016's tag enrichment doesn't close the gap, pgvector is the next step.
+- **External search service (Algolia, Meilisearch, Typesense):** Purpose-built search with typo tolerance and faceting. Genuinely good at scale. But it's another service, another sync, another bill, and another thing that can go down. At a few hundred providers, Postgres handles both tracks and one fewer moving part wins.
+- **Flat tag list (no categories):** Dump all chips on the page, let patients scroll. Works at 10 tags, unwieldy at 50+. Patients scanning a wall of chips have the blank-page problem — they don't know where to start. Category headers give them an entry point: "I have a comfort concern" → scan Comfort & Approach. Minimal implementation cost for a real UX improvement.
+- **Provider-categorized tags (provider picks the category when adding a tag):** Free taxonomy maintenance, but inconsistent results — "is 'pediatric' a population or a service?" Nicole-curated categories keep the patient-facing grouping coherent, same rationale as the credentials reference table (ADR-010).
+
+---
+
+## ADR-016: Batch tag suggestion pipeline — search log → Claude → practitioner review
+
+**Date:** 2026-04-03
+**Status:** Accepted
+**Depends on:** ADR-015 (search log table)
+
+**Context:** ADR-015's full-text search can match words but can't bridge the vocabulary gap between how patients describe what they need and how providers tag themselves. A patient searching "I haven't been to the dentist in ten years" needs a provider whose bio radiates non-judgment — but if that provider tagged themselves "adult care" and "comprehensive exams" instead of "judgment-free" or "dental anxiety," there's no match. The intelligence to close that gap exists (LLMs are good at this), but running it per-query is too expensive pre-revenue. Running it in batch on a schedule is cheap and produces a durable artifact: better provider tags.
+
+**Decision:** A periodic batch job reads the search log, sends all provider profiles + recent search queries to Claude, and gets back suggested tags that providers *should* be listing based on what their bios and existing profiles imply. Suggestions go to providers for review — not auto-applied.
+
+**Pipeline:**
+
+1. **Trigger:** Manual initially (Nicole runs it). Automated later on a cadence/threshold combo: weekly OR every 200 new search log entries, whichever comes first. The trigger logic lives in a config, not hardcoded.
+
+2. **Input assembly:** Pull all provider records (profiles + existing tags + credentials). Pull search log entries since the last batch run. Bundle into a single prompt.
+
+<!-- At 200 providers × ~500 tokens each = ~100K tokens of provider data,
+     plus search log summary. Fits comfortably in Claude's context window.
+     At 2,000 providers, split by provider_type or region and run multiple
+     batches. At 4,000, still fine split into 4 batches. This scales to
+     the realistic ceiling of Oregon hygienists. -->
+
+3. **Claude call:** One API call (or a small number of batched calls if the corpus is split). Prompt asks Claude to:
+   - Identify tags that providers are missing based on what their bio/mission/credentials imply
+   - Map patient search vocabulary to provider self-description vocabulary
+   - Return structured JSON: `[{provider_id, suggested_tags: [{tag, reasoning}]}]`
+   - Model: use whatever's cheapest that handles the context well. Haiku with prompt caching is the target — cache the provider corpus (pay the write once), pay the read rate per batch run. Estimated cost: under $5/month even with weekly runs.
+
+4. **Suggestion storage:** New table `tag_suggestions`: `id`, `provider_id` (FK), `suggested_tag`, `reasoning`, `batch_id`, `status` (enum: PENDING, ACCEPTED, REJECTED, EXPIRED), `created_at`, `reviewed_at`. Batch ID groups suggestions from the same run for auditing.
+
+5. **Provider review flow:** Provider dashboard shows a notification: "We have tag suggestions for your profile." Each suggestion shows the tag and the reasoning ("Patients are searching for 'dental anxiety' and your bio mentions 'gentle, non-judgmental approach' — consider adding this tag"). Provider can accept (tag added to their profile), reject (tag dismissed, not re-suggested for the same reasoning), or ignore (expires after 30 days, may be re-suggested in a future batch if the signal persists).
+
+<!-- The 3-day review window from the original conversation is now 30 days.
+     Providers are busy. 3 days felt like a deadline; 30 days feels like
+     an invitation. Auto-expire + potential re-suggestion means nothing
+     is lost by waiting. -->
+
+6. **Feedback loop:** Accepted and rejected suggestions inform future prompts. "Provider X rejected 'pediatric' — their bio mentions children but they don't see pediatric patients" is a valuable negative signal for the next batch.
+
+**Rationale:**
+
+- **Cost-capped by design.** Batch frequency is configurable. At $5/month ceiling with weekly runs, this is a rounding error. If it creeps above that, reduce frequency or switch to a cheaper model. The trigger threshold (every 200 searches) means quiet periods don't burn money on redundant runs.
+- **Providers own their profiles.** Nothing is auto-applied. The suggestion + reasoning pattern respects practitioner autonomy and builds trust. "We noticed patients are searching for X and your profile suggests you offer this" is a *delightful* notification, not an imposition.
+- **Improves ADR-015 search quality without changing ADR-015.** Better tags mean better tag browsing matches and better full-text search matches. The search architecture doesn't need to get smarter — the data it searches gets richer. This is the cheapest possible way to improve search quality.
+- **The search log is the moat.** Competitors can copy the directory. They can't copy "what Oregon patients actually search for" because they don't have the traffic. This pipeline turns traffic into data into better matching into more traffic.
+
+**Alternatives considered:**
+
+- **Auto-apply tags with opt-out:** Faster profile improvement, but violates practitioner trust. A hygienist who sees tags they didn't choose on their public profile will be angry, and rightly so. Especially for sensitive tags ("LGBT sensitive") where the provider may support the community but not want it as a public profile tag for personal safety reasons. Opt-in only.
+- **Real-time per-query LLM matching (skip the tags entirely):** Best search quality, worst cost profile. And it doesn't produce the durable artifact — if the LLM goes down or gets too expensive, you lose the intelligence. Batch-generated tags persist in the database forever. The intelligence is baked into the data, not rented per-query.
+- **Provider self-service tag suggestions (no LLM):** Show providers the top search queries and let them self-select matches. Cheaper than Claude, but providers don't think in patient vocabulary — that's the whole problem this pipeline solves. The LLM is the translator between patient-speak and provider-speak.
+- **Embedding-based auto-tagging:** Embed the tag taxonomy + provider bios, find nearest tags by cosine similarity. Cheaper than Claude per run, but can't explain *why* a tag is suggested. The reasoning field is doing real work in the provider review UX — it's the difference between "add this tag" and "here's why this tag fits you." Claude provides the reasoning; embeddings don't.
+
+**Future:**
+
+- If/when FindMyHygienist has a paid tier, real-time LLM search becomes viable as a premium feature. The batch pipeline still runs underneath to improve free-tier search.
+- The `tag_suggestions` table + acceptance rate is a natural A/B testing surface: "do Claude-suggested tags improve search-to-click conversion?"
