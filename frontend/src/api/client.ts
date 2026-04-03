@@ -27,7 +27,10 @@ import type {
   PublicProfile,
 } from "../types/provider";
 
-const API_BASE = "/api";
+// dev, local vs main, production
+const API_BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : "/api";
 
 // ── CSRF helper ──────────────────────────────────────────────────
 
