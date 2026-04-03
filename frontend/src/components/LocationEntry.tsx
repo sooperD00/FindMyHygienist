@@ -12,16 +12,15 @@
  *
  * Fetches GET /api/me/locations on mount. The Step 1 "home base"
  * location is already in the DB, so it appears automatically.
- * 
+ *
  * This component manages its own state and fetches data on mount - not in Accordion.tsx
- * Closing the accordion destroys it, reopening remounts and re-fetches 
+ * Closing the accordion destroys it, reopening remounts and re-fetches
  * from the server. Saved locations are safe. A half-filled add form is lost.
  * OK for location data with saves for each location (bad for something like bio maybe).
- * 
- * TODO: Consider getting already-fetched `get /api/me/locations` as a prop since
- * IntakeProfile (which includes `locations` on `OwnProfile`) fetches the full profile
- * 
- * TODO: Consider useSaveState hook like in IntakeProfile to handle multiple action errors
+ *
+ * Sprint 9: added inline edit mode. LocationCard can switch to an edit
+ * form that pre-populates from the existing location and PATCHes on save.
+ * Replaces the old "delete and re-add" workflow for fixing typos.
  */
 
 import { useEffect, useState } from "react";
@@ -31,7 +30,7 @@ import {
   apiUpdateLocation,
   apiDeleteLocation,
 } from "../api/client";
-import type { OwnLocation, LocationCreate } from "../types/provider";
+import type { OwnLocation, LocationCreate, LocationUpdate } from "../types/provider";
 
 // ── Empty form state ──────────────────────────────────────────────
 
@@ -49,16 +48,127 @@ function emptyForm(isPublic: boolean): LocationCreate {
   };
 }
 
-// ── Location card ─────────────────────────────────────────────────
+// ── Shared location form fields ───────────────────────────────────
+// Used by both AddLocationForm and EditLocationForm to avoid
+// duplicating the same 7 fields.
+
+function LocationFormFields({
+  label,
+  practiceName,
+  addressLine1,
+  city,
+  state,
+  zipCode,
+  isPublic,
+  onUpdate,
+}: {
+  label: string;
+  practiceName: string;
+  addressLine1: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  isPublic: boolean;
+  onUpdate: (field: string, value: string | boolean) => void;
+}) {
+  return (
+    <>
+      <label>
+        Label
+        <input
+          type="text"
+          value={label}
+          onChange={(e) => onUpdate("label", e.target.value)}
+          placeholder={
+            isPublic
+              ? 'e.g. "Main Office", "Community Health Center"'
+              : 'e.g. "Travel base", "Home area"'
+          }
+        />
+      </label>
+
+      {isPublic && (
+        <label>
+          Practice name
+          <input
+            type="text"
+            value={practiceName}
+            onChange={(e) => onUpdate("practice_name", e.target.value)}
+            placeholder="e.g. Pacific Dental Services"
+          />
+        </label>
+      )}
+
+      {isPublic && (
+        <label>
+          Address
+          <input
+            type="text"
+            value={addressLine1}
+            onChange={(e) => onUpdate("address_line1", e.target.value)}
+            placeholder="Street address"
+          />
+        </label>
+      )}
+
+      <div className="location-form-row">
+        <label className="location-form-city">
+          City
+          <input
+            type="text"
+            value={city}
+            onChange={(e) => onUpdate("city", e.target.value)}
+          />
+        </label>
+        <label className="location-form-state">
+          State
+          <input
+            type="text"
+            value={state}
+            onChange={(e) => onUpdate("state", e.target.value)}
+            maxLength={2}
+          />
+        </label>
+        <label className="location-form-zip">
+          Zip
+          <input
+            type="text"
+            value={zipCode}
+            onChange={(e) => onUpdate("zip_code", e.target.value)}
+            placeholder="97123"
+          />
+        </label>
+      </div>
+
+      <label className="location-toggle">
+        <input
+          type="checkbox"
+          checked={isPublic}
+          onChange={(e) => onUpdate("is_public", e.target.checked)}
+        />
+        Show on my profile
+      </label>
+      <small className="helper-text">
+        {isPublic
+          ? "Patients will see this location's name and city on your profile."
+          : "This location is used for search only. Patients won't see it."}
+      </small>
+    </>
+  );
+}
+
+// ── Location card (display mode) ──────────────────────────────────
 
 function LocationCard({
   loc,
   onTogglePublic,
   onDelete,
+  onEdit,
 }: {
   loc: OwnLocation;
   onTogglePublic: () => void;
   onDelete: () => void;
+  onEdit: () => void;
 }) {
   const summary = [loc.city, loc.state].filter(Boolean).join(", ");
   const address = [loc.address_line1, loc.address_line2]
@@ -92,10 +202,111 @@ function LocationCard({
         </label>
         <button
           type="button"
+          onClick={onEdit}
+          className="btn btn-small btn-secondary"
+        >
+          Edit
+        </button>
+        <button
+          type="button"
           onClick={onDelete}
           className="btn btn-small btn-danger"
         >
           Remove
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Edit location form (inline) ───────────────────────────────────
+// Pre-populated from existing location. PATCHes on save.
+
+function EditLocationForm({
+  loc,
+  onSave,
+  onCancel,
+}: {
+  loc: OwnLocation;
+  onSave: (id: string, data: LocationUpdate) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [label, setLabel] = useState(loc.label);
+  const [practiceName, setPracticeName] = useState(loc.practice_name || "");
+  const [addressLine1, setAddressLine1] = useState(loc.address_line1 || "");
+  const [city, setCity] = useState(loc.city || "");
+  const [state, setState] = useState(loc.state || "OR");
+  const [zipCode, setZipCode] = useState(loc.zip_code || "");
+  const [isPublic, setIsPublic] = useState(loc.is_public);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function handleFieldUpdate(field: string, value: string | boolean) {
+    switch (field) {
+      case "label": setLabel(value as string); break;
+      case "practice_name": setPracticeName(value as string); break;
+      case "address_line1": setAddressLine1(value as string); break;
+      case "city": setCity(value as string); break;
+      case "state": setState(value as string); break;
+      case "zip_code": setZipCode(value as string); break;
+      case "is_public": setIsPublic(value as boolean); break;
+    }
+  }
+
+  async function handleSubmit() {
+    if (!label.trim()) {
+      setError("Label is required");
+      return;
+    }
+    setError(null);
+    setSubmitting(true);
+    try {
+      await onSave(loc.id, {
+        label,
+        practice_name: practiceName || null,
+        address_line1: addressLine1 || null,
+        city: city || null,
+        state: state || "OR",
+        zip_code: zipCode || null,
+        is_public: isPublic,
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="location-add-form">
+      {error && <p className="form-error">{error}</p>}
+
+      <LocationFormFields
+        label={label}
+        practiceName={practiceName}
+        addressLine1={addressLine1}
+        city={city}
+        state={state}
+        zipCode={zipCode}
+        isPublic={isPublic}
+        onUpdate={handleFieldUpdate}
+      />
+
+      <div className="location-form-actions">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="btn btn-small"
+        >
+          {submitting ? "Saving…" : "Save changes"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="btn btn-small btn-secondary"
+        >
+          Cancel
         </button>
       </div>
     </div>
@@ -121,6 +332,14 @@ function AddLocationForm({
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  function handleFieldUpdate(field: string, value: string | boolean) {
+    if (field === "is_public") {
+      update("is_public", value as boolean);
+    } else {
+      update(field as keyof LocationCreate, (value as string) || null);
+    }
+  }
+
   async function handleSubmit() {
     if (!form.label?.trim()) {
       setError("Label is required");
@@ -141,82 +360,16 @@ function AddLocationForm({
     <div className="location-add-form">
       {error && <p className="form-error">{error}</p>}
 
-      <label>
-        Label
-        <input
-          type="text"
-          value={form.label}
-          onChange={(e) => update("label", e.target.value)}
-          placeholder={isPublic ? 'e.g. "Main Office", "Community Health Center"' : 'e.g. "Travel base", "Home area"'}
-        />
-      </label>
-
-      {isPublic && (
-        <label>
-          Practice name
-          <input
-            type="text"
-            value={form.practice_name || ""}
-            onChange={(e) => update("practice_name", e.target.value || null)}
-            placeholder="e.g. Pacific Dental Services"
-          />
-        </label>
-      )}
-
-      {isPublic && (
-        <label>
-          Address
-          <input
-            type="text"
-            value={form.address_line1 || ""}
-            onChange={(e) => update("address_line1", e.target.value || null)}
-            placeholder="Street address"
-          />
-        </label>
-      )}
-
-      <div className="location-form-row">
-        <label className="location-form-city">
-          City
-          <input
-            type="text"
-            value={form.city || ""}
-            onChange={(e) => update("city", e.target.value || null)}
-          />
-        </label>
-        <label className="location-form-state">
-          State
-          <input
-            type="text"
-            value={form.state || "OR"}
-            onChange={(e) => update("state", e.target.value)}
-            maxLength={2}
-          />
-        </label>
-        <label className="location-form-zip">
-          Zip
-          <input
-            type="text"
-            value={form.zip_code || ""}
-            onChange={(e) => update("zip_code", e.target.value || null)}
-            placeholder="97123"
-          />
-        </label>
-      </div>
-
-      <label className="location-toggle">
-        <input
-          type="checkbox"
-          checked={form.is_public ?? isPublic}
-          onChange={(e) => update("is_public", e.target.checked)}
-        />
-        Show on my profile
-      </label>
-      <small className="helper-text">
-        {form.is_public
-          ? "Patients will see this location's name and city on your profile."
-          : "This location is used for search only. Patients won't see it."}
-      </small>
+      <LocationFormFields
+        label={form.label}
+        practiceName={form.practice_name || ""}
+        addressLine1={form.address_line1 || ""}
+        city={form.city || ""}
+        state={form.state || "OR"}
+        zipCode={form.zip_code || ""}
+        isPublic={form.is_public ?? isPublic}
+        onUpdate={handleFieldUpdate}
+      />
 
       <div className="location-form-actions">
         <button
@@ -247,6 +400,7 @@ export default function LocationEntry() {
   const [error, setError] = useState<string | null>(null);
   const [addingPublic, setAddingPublic] = useState(false);
   const [addingPrivate, setAddingPrivate] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     apiGetLocations()
@@ -267,6 +421,14 @@ export default function LocationEntry() {
     setAddingPrivate(false);
   }
 
+  async function handleEdit(id: string, data: LocationUpdate) {
+    const updated = await apiUpdateLocation(id, data);
+    setLocations((prev) =>
+      prev.map((l) => (l.id === updated.id ? updated : l))
+    );
+    setEditingId(null);
+  }
+
   async function handleTogglePublic(loc: OwnLocation) {
     try {
       const updated = await apiUpdateLocation(loc.id, {
@@ -281,7 +443,7 @@ export default function LocationEntry() {
   }
 
   async function handleDelete(id: string) {
-  if (!window.confirm("Remove this location?")) return;
+    if (!window.confirm("Remove this location?")) return;
     try {
       await apiDeleteLocation(id);
       setLocations((prev) => prev.filter((l) => l.id !== id));
@@ -291,6 +453,29 @@ export default function LocationEntry() {
   }
 
   if (loading) return <p className="helper-text">Loading locations…</p>;
+
+  /** Render a location as either a card or an edit form. */
+  function renderLocation(loc: OwnLocation) {
+    if (editingId === loc.id) {
+      return (
+        <EditLocationForm
+          key={loc.id}
+          loc={loc}
+          onSave={handleEdit}
+          onCancel={() => setEditingId(null)}
+        />
+      );
+    }
+    return (
+      <LocationCard
+        key={loc.id}
+        loc={loc}
+        onTogglePublic={() => handleTogglePublic(loc)}
+        onDelete={() => handleDelete(loc.id)}
+        onEdit={() => setEditingId(loc.id)}
+      />
+    );
+  }
 
   return (
     <div className="location-entry">
@@ -307,14 +492,7 @@ export default function LocationEntry() {
             e.g. "Main Office — Portland, OR" or "Salem Community Health Center"
           </p>
         )}
-        {publicLocs.map((loc) => (
-          <LocationCard
-            key={loc.id}
-            loc={loc}
-            onTogglePublic={() => handleTogglePublic(loc)}
-            onDelete={() => handleDelete(loc.id)}
-          />
-        ))}
+        {publicLocs.map(renderLocation)}
         {addingPublic ? (
           <AddLocationForm
             isPublic={true}
@@ -345,14 +523,7 @@ export default function LocationEntry() {
             e.g. your home area zip code so patients near you can find you
           </p>
         )}
-        {privateLocs.map((loc) => (
-          <LocationCard
-            key={loc.id}
-            loc={loc}
-            onTogglePublic={() => handleTogglePublic(loc)}
-            onDelete={() => handleDelete(loc.id)}
-          />
-        ))}
+        {privateLocs.map(renderLocation)}
         {addingPrivate ? (
           <AddLocationForm
             isPublic={false}
