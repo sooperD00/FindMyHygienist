@@ -1,10 +1,9 @@
 /**
- * Sprint 7 — LocationEntry component tests.
+ * Sprint 7 + Sprint 9 — LocationEntry component tests.
  *
- * The most complex Sprint 6 component: fetches locations on mount,
- * splits them into public/private sections, has add forms with
- * validation, toggle is_public via PATCH, and delete with
- * window.confirm gate.
+ * Sprint 7: fetches, splits public/private, add forms, toggle, delete.
+ * Sprint 9: inline edit mode — click Edit, modify fields, save calls
+ *           apiUpdateLocation with the changed fields.
  *
  * Mocks all four location API functions. Uses vi.spyOn for
  * window.confirm since the delete handler reads its return value.
@@ -27,6 +26,7 @@ vi.mock("../api/client", () => ({
 import {
   apiGetLocations,
   apiCreateLocation,
+  apiUpdateLocation,
   apiDeleteLocation,
 } from "../api/client";
 
@@ -171,5 +171,105 @@ describe("LocationEntry", () => {
     });
     // The other location should still be there
     expect(screen.getByText("Travel base")).toBeInTheDocument();
+  });
+
+  /* ── Sprint 9: inline edit mode ────────────────────────────── */
+
+  it("shows Edit button on each location card", async () => {
+    render(<LocationEntry />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+    });
+
+    const editButtons = screen.getAllByRole("button", { name: "Edit" });
+    expect(editButtons).toHaveLength(2); // one per location
+  });
+
+  it("switches to edit form when Edit is clicked", async () => {
+    const user = userEvent.setup();
+    render(<LocationEntry />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+    });
+
+    // Click Edit on the first (public) location
+    const editButtons = screen.getAllByRole("button", { name: "Edit" });
+    await user.click(editButtons[0]);
+
+    // Edit form should have Save changes and Cancel buttons
+    expect(
+      screen.getByRole("button", { name: "Save changes" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Cancel" })
+    ).toBeInTheDocument();
+
+    // The Label input should be pre-populated
+    const labelInput = screen.getByLabelText("Label");
+    expect(labelInput).toHaveValue("Main Office");
+  });
+
+  it("calls apiUpdateLocation on edit save", async () => {
+    const user = userEvent.setup();
+    const updatedLoc = {
+      ...MOCK_LOCATIONS[0],
+      label: "Downtown Office",
+    };
+    vi.mocked(apiUpdateLocation).mockResolvedValue(updatedLoc);
+
+    render(<LocationEntry />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+    });
+
+    // Click Edit
+    const editButtons = screen.getAllByRole("button", { name: "Edit" });
+    await user.click(editButtons[0]);
+
+    // Clear and retype the label
+    const labelInput = screen.getByLabelText("Label");
+    await user.clear(labelInput);
+    await user.type(labelInput, "Downtown Office");
+
+    // Save
+    await user.click(
+      screen.getByRole("button", { name: "Save changes" })
+    );
+
+    expect(apiUpdateLocation).toHaveBeenCalledWith("loc-1", expect.objectContaining({
+      label: "Downtown Office",
+    }));
+
+    // Card should show updated label
+    await waitFor(() => {
+      expect(screen.getByText("Downtown Office")).toBeInTheDocument();
+    });
+  });
+
+  it("cancels edit and returns to card view", async () => {
+    const user = userEvent.setup();
+    render(<LocationEntry />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+    });
+
+    // Click Edit
+    const editButtons = screen.getAllByRole("button", { name: "Edit" });
+    await user.click(editButtons[0]);
+
+    // Cancel
+    await user.click(
+      screen.getByRole("button", { name: "Cancel" })
+    );
+
+    // Should be back to card view with original label
+    expect(screen.getByText("Main Office")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Save changes" })
+    ).not.toBeInTheDocument();
   });
 });
