@@ -8,15 +8,23 @@ Ownership check: every write verifies location.provider_id == the
 authenticated provider's id. This prevents a provider from editing
 another provider's locations by guessing UUIDs.
 
-Lat/lng stay nullable — geocoding deferred to Sprint 7 (Nominatim).
+Geocoding decision logic (Sprint 11): decide when and what to geocode
+separate from geocoding mechanics (how to call nominatum is in geocoding_service.py)
+Here, we create and update call Nominatim to populate
+lat/lng from the provider's address or zip code. Best-effort — if
+geocoding fails, the save still succeeds and lat/lng stay None.
 """
 
+import logging
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from app.models.provider import ProviderLocation
+from app.services import geocoding_service
+
+logger = logging.getLogger(__name__)
 
 
 MAX_LOCATIONS_PER_PROVIDER = 10
@@ -34,6 +42,46 @@ LOCATION_EDITABLE_FIELDS = {
     "is_primary",
     "is_public",
 }
+
+# Address fields that trigger re-geocoding on update.
+_ADDRESS_FIELDS = {"address_line1", "address_line2", "city", "state", "zip_code"}
+
+
+async def _geocode_location(data: dict) -> tuple[float | None, float | None]:
+    """Best-effort geocoding from address fields.
+
+    Fallback chain:
+    Tries full address first (more accurate), falls back to zip-only.
+    Returns (lat, lng) or (None, None) if geocoding fails or no
+    geocodable fields are present.
+    """
+    address_line1 = data.get("address_line1")
+    city = data.get("city")
+    state = data.get("state", "OR")
+    zip_code = data.get("zip_code")
+
+    # Try full address first if we have street + city or street + zip
+    if address_line1 and (city or zip_code):
+        parts = [address_line1]
+        if data.get("address_line2"):
+            parts.append(data["address_line2"])
+        if city:
+            parts.append(city)
+        parts.append(state)
+        if zip_code:
+            parts.append(zip_code)
+        full_address = ", ".join(parts)
+        result = await geocoding_service.geocode_address(full_address)
+        if result:
+            return result.latitude, result.longitude
+
+    # Fall back to zip-only (graceful degradation)
+    if zip_code:
+        result = await geocoding_service.geocode_zip(zip_code)
+        if result:
+            return result.latitude, result.longitude
+
+    return None, None
 
 
 async def get_provider_locations(
@@ -90,6 +138,14 @@ async def create_location(
         await _clear_all_primaries(db, provider_id)  # no ID yet, use clear "all" primaries helper
 
     location = ProviderLocation(provider_id=provider_id, **safe_data)
+
+    # Best-effort geocoding (ADR-004 revised, Sprint 11)
+    lat, lng = await _geocode_location(safe_data)
+    # Keep old good values if this geocoding failed
+    if lat is not None:
+        location.latitude = lat
+        location.longitude = lng
+
     db.add(location)
     await db.flush()
     return location
@@ -116,6 +172,21 @@ async def update_location(
     
     for field, value in safe_updates.items():
         setattr(location, field, value)
+
+    # Re-geocode (only) if any address field changed (ADR-004 revised, Sprint 11)
+    if safe_updates.keys() & _ADDRESS_FIELDS:  # set intersection
+        geo_data = {
+            "address_line1": location.address_line1,
+            "address_line2": location.address_line2,
+            "city": location.city,
+            "state": location.state,
+            "zip_code": location.zip_code,
+        }
+        lat, lng = await _geocode_location(geo_data)
+        # Keep old good values if this geocoding failed
+        if lat is not None:
+            location.latitude = lat
+            location.longitude = lng
 
     db.add(location)
     await db.flush()  # then set
