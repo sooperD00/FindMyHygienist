@@ -4,6 +4,38 @@
      Include the actual date range, any deviations from plan, and
      links to relevant commits or PRs. Latest sprints are at the top. -->
 
+---
+
+## Sprint 10 — Early Deploy (Day 16) - DONE 4/4 10:17a
+
+**Goal:** App is live on Railway behind `findmyhygienist.org`. AutoUpdate (CD) is on — every push to main deploys automatically. No feature work in this sprint, just infrastructure. CI logged as tech debt.
+
+- [x] ohp-app -> FindMyHygienist name change and conference branding
+- [x] Github main and dev branch and commit behavior change
+- [x] Backend prep: `Procfile` (`uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}`), confirm `requirements.txt` is current, confirm DATABASE_URL handling (SQLAlchemy wants `postgresql://` not `postgres://`)
+- [x] Frontend prep: `npm install serve --save-dev`, add `"start": "serve dist -s -l tcp://0.0.0.0:${PORT:-3000}"` to package.json scripts
+- [x] Railway: create **backend** service from GitHub repo (set root directory), wire DATABASE_URL reference from existing Postgres service, add SECRET_KEY + AUTO_APPROVE=true + other env vars from local .env
+- [x] Railway: create **frontend** service from same repo (set root directory), set VITE_API_URL to backend's generated Railway domain
+- [x] DNS: add `findmyhygienist.org` (and `.com` redirect) as custom domain on frontend service, add CNAME at registrar per Railway's instructions
+- [x] create sub-domains for dev and api so that csrf token pattern can be strict about "don't let cross domain talk" stuff in the code - deployed domains are now same, just like when you tested in local
+- [x] Auto-deploy on push to main for both services
+- [x] Smoke test: home page loads, register → profile → view public profile
+
+<!-- This sprint exists because first deploys always surface
+     surprises (missing env vars, CORS in production, path
+     differences). Doing it now means Sprints 11–17 land on
+     a live URL automatically, and Cris can see progress.
+
+     Photo storage stays on local filesystem for now — S3
+     swap is still in Sprint 17. Seed data and email aren't
+     built yet. That's fine — the app works without them.
+
+     ⚠️ Railway's filesystem is ephemeral — every push from
+     Sprints 11–17 wipes uploaded photos. Only test data
+     should be uploaded until S3 is wired in Sprint 17.
+
+     See sprint-deploy-early.md for Nicole-facing step-by-step
+     instructions with more detail than this task list. -->
 
 ---
 
