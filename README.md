@@ -90,7 +90,8 @@ ohp-app/
 │   │   ├── config.py                   # - [x] Sprint 0/2/5/10: Pydantic settings (DB, secret_key, session lifetime, CORS, debug, photo_upload_dir, cookie_domain for subdomain CSRF sharing)
 │   │   ├── database.py                 # - [x] Sprint 0: Async engine + session setup
 │   │   ├── dependencies.py            # - [x] Sprint 2: get_current_user, csrf_protect, require_admin (Depends chain)
-│   │   ├── seed.py                    # - [x] Sprint 2: CLI script to create admin User
+│   │   ├── seed.py                    # - [x] Sprint 2: CLI script to create admin User + credential seed
+│   │   ├── seed_demo.py              # - [x] Sprint 11: example provider profiles (4 providers exercising different feature paths)
 │   │   ├── models/
 │   │   │   ├── __init__.py             # - [x] Sprint 0: scaffold
 │   │   │   ├── enums.py                # - [x] Sprint 1: UserRole, CredentialType, ProviderType, ProviderStatus, Availability, FeedbackType
@@ -113,7 +114,8 @@ ohp-app/
 │   │       ├── profile_service.py    # - [x] Sprint 4: credential queries, provider lookup, profile updates, credential replacement
 │   │       ├── session_service.py     # - [x] Sprint 2: create/get/delete session (~50 lines)
 │   │       ├── photo_service.py      # - [x] Sprint 5: photo validation, upload, delete (delegates to storage backend)
-│   │       ├── location_service.py   # - [x] Sprint 5: location CRUD, is_primary management, max-10 guard
+│   │       ├── geocoding_service.py  # - [x] Sprint 11: Nominatim geocoding — zip and address to lat/lng (ADR-004 revised)
+│   │       ├── location_service.py   # - [x] Sprint 5/11: location CRUD, is_primary management, max-10 guard, geocode on create/update
 │   │       └── storage.py            # - [x] Sprint 5: storage abstraction — LocalStorage (dev) / S3Storage (prod, Sprint 12)
 │   └── tests/                          # - [x] PyTests: 148/148 pass
 │       ├── __init__.py
@@ -121,7 +123,8 @@ ohp-app/
 │       ├── test_auth.py                # - [x] Sprint 2: 18 tests (no DB): argon2id roundtrip, pw len, token format, CSRF compare_digest, slug generation, Session model fields. No DB needed.
 │       ├── test_profile.py             # - [x] Sprint 4: 29 tests (no DB): schema validation, EDITABLE_FIELDS whitelist, response field presence (OwnProfile has draft+status, PublicProfile omits them), enum serialization sanity
 │       ├── test_photo.py               # - [x] Sprint 5: 28 tests (no DB): file validation (type, size, empty), storage abstraction, upload/delete flows, photo_url lifecycle
-│       └── test_locations.py           # - [x] Sprint 5: 28 tests (no DB): location CRUD schemas, is_primary logic, is_public filtering, max-10 limit, public vs own response fields
+│       ├── test_locations.py           # - [x] Sprint 5: 28 tests (no DB): location CRUD schemas, is_primary logic, is_public filtering, max-10 limit, public vs own response fields
+│       └── test_geocoding.py          # - [x] Sprint 11: 20 tests (no DB): geocode_zip, geocode_address, _geocode_location fallback chain, geocode-on-create/update integration
 └── frontend/
     ├── .gitignore                      # - [x] Sprint 0: Vite/Node defaults
     ├── index.html                      # - [x] Sprint 0: Vite entry point

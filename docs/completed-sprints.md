@@ -7,7 +7,7 @@
 
 ---
 
-## Sprint 11 — Geocoding — Backend (Day 17 4/4 Sat)
+## Sprint 11 — Geocoding — Backend (Day 17) - DONE 4/4 1:45p
 
 **Goal:** Providers get lat/lng on their locations so search can find them by distance. Pure backend — wire Nominatim into location saves and backfill existing records.
 
