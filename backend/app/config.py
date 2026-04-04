@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     # False in dev so localhost works without certs.
     debug: bool = Field(default=False)
 
+    # Cookie domain for cross-subdomain sharing in prod
+    # (e.g., ".findmyhygienist.org" not hardcoded). None in dev = browser defaults to current host.
+    cookie_domain: str | None = Field(default=None)
+
     # Local filesystem path for photo uploads in dev (Sprint 5).
     # Ignored in prod — S3 backend uses bucket config instead (Sprint 12).
     photo_upload_dir: str = Field(default="./uploads")

@@ -72,7 +72,8 @@ def _set_session_cookies(response: Response, session) -> None:
     samesite ="lax"  
     max_age = settings.session_lifetime_hours * 3600
     # Share cookies across subdomains in prod (findmyhygienist.org + api.findmyhygienist.org)
-    domain = ".findmyhygienist.org" if secure else None
+    # read from config (env vars) if prod, None if local (from config.py)
+    domain = settings.cookie_domain
 
     response.set_cookie(
         key="session_id",

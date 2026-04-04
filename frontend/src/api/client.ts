@@ -87,7 +87,8 @@ export async function apiFetch(
     ...options,
     method,
     headers,
-    credentials: "include", // send cookies (session_id + csrf_token), allow cross-site (protected by token)
+    // credentials: "include", // send cookies (session_id + csrf_token), allow cross-site (protected by token)
+    credentials: "same-origin", // revert back bc you made subdomains for prod and dev so domain could match
   });
 
   if (!res.ok) {

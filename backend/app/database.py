@@ -12,7 +12,8 @@ db_url = settings.database_url
 if "+asyncpg" not in db_url:
     db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-engine = create_async_engine(db_url, echo=True)
+# echo (log) every SQL statement in dev/debug=True, but not in production
+engine = create_async_engine(db_url, echo=settings.debug)
 
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
