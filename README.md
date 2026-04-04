@@ -43,6 +43,22 @@ npm install
 npm run dev
 ```
 
+## Seed Data
+```bash
+python -m app.seed        # credentials + admin (every env)
+python -m app.seed_demo   # example providers (dev/staging only)
+```
+
+The example providers are tagged `example-profile` and prefixed `[Example]` in their display names. Each one exercises a different feature path:
+
+| Provider | Credentials | Locations | Showcases |
+|---|---|---|---|
+| Jenna Morris | EPDH, DT, RDH | Bend (private) | Mobile provider, private home base, max_travel_miles |
+| Ryan Ashworth | RDH, LAP | Portland, Happy Valley | Multi-location, diagnostics niche |
+| Dana Henshaw | RDH, BSDH | Portland | Anxiety-aware care, single location |
+| Elena Vega | RDH, EPDH, RFE | Salem, Woodburn | Bilingual, school-based, community health |
+
+
 ## Project Structure
 
 > `[x]` = implemented and on disk. `[ ]` = planned — the file doesn't exist yet but its location is part of the design. This tree is both a map and a roadmap.
