@@ -29,9 +29,13 @@ There is one admin user (Nicole) who reviews and approves provider profiles befo
                        └──────────────┘
 ```
 
-<!-- In dev, Vite proxies /api/* to FastAPI on :8000. In prod, both
-     services deploy separately and the frontend fetches from the
-     API's public URL (configured via env var). -->
+<!-- In dev, Vite proxies /api/* to FastAPI on :8000. In prod,
+     frontend deploys to findmyhygienist.org and backend to
+     api.findmyhygienist.org — both as separate Railway services
+     with auto-deploy on push to main. The frontend reads
+     VITE_API_URL at build time. Session cookies and CSRF tokens
+     share the parent domain via cookie_domain='.findmyhygienist.org'
+     (ADR-017). -->
 
 ---
 
@@ -171,7 +175,7 @@ Seed data (17 entries):
 | `practice_name` | str | Optional — e.g. "Pacific Dental Services" (may differ per location) |
 | `address_line1` | str | |
 | `address_line2` | str | Optional |
-| `city` | str | Nullable, indexed — zip-only private locations may omit (ADR-013; geocoding backfills in Sprint 10) |
+| `city` | str | Nullable, indexed — zip-only private locations may omit (ADR-013; geocoding backfills in Sprint 11) |
 | `state` | str | Always "OR" for now, but don't hardcode (ADR-008) |
 | `zip_code` | str | Indexed |
 | `latitude` | float | For Haversine search |

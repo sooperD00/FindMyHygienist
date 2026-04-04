@@ -115,9 +115,9 @@
 
 **Goal:** Backend handles file uploads and multi-location provider records.
 
-- [x] `POST /api/me/photo` — upload profile photo, store URL. Dev: local filesystem stub behind a storage interface. Prod S3 backend wired in Sprint 14 (bucket doesn't exist yet).
+- [x] `POST /api/me/photo` — upload profile photo, store URL. Dev: local filesystem stub behind a storage interface. Prod S3 backend wired in Sprint 17 (bucket doesn't exist yet).
 - [x] `DELETE /api/me/photo` — remove profile photo
-- [x] Provider Location CRUD — add/edit/remove practice locations with label, practice_name, addresses. Lat/lng columns stay nullable — geocoding deferred to Sprint 10 when Nominatim implementation exists.
+- [x] Provider Location CRUD — add/edit/remove practice locations with label, practice_name, addresses. Lat/lng columns stay nullable — geocoding deferred to Sprint 11 when Nominatim implementation exists.
 
 <!-- Different shape of work from Sprint 4: file validation, storage
      abstraction, and a multi-record sub-resource. Benefits from its

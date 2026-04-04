@@ -352,18 +352,18 @@ Text column, nullable. Set by admin when requesting changes or suspending. Clear
 **Migration (Sprint 5):**
 
 1. Add `is_public` column (BOOLEAN, NOT NULL, DEFAULT TRUE) to `provider_locations`
-2. Make `city` nullable on `provider_locations` — zip-code-only private locations won't always have a city (geocoding in Sprint 10 can backfill it from the zip)
+2. Make `city` nullable on `provider_locations` — zip-code-only private locations won't always have a city (geocoding in Sprint 11 can backfill it from the zip)
 
 **Rationale:**
 
 - **One table, one flag.** A public office and a private home base are the same shape of data — address, label, coordinates. Splitting them into separate tables doubles the CRUD, doubles the search query joins, and creates a "which table do I add this to?" UX decision that maps poorly to how providers think about their locations. A boolean on the existing table is the minimum viable distinction.
 - **Default public.** Most locations are practice sites that providers want displayed. The private case (traveling from home) is the exception that needs an explicit opt-out, not the default. This keeps the intake flow simple for the common case (dentist entering an office address) while still supporting the EPDH case.
-- **Search uses all locations regardless of is_public.** Sprint 10's search service queries `provider_locations` without filtering on `is_public` — a private home-base location still puts the provider in radius results. The flag only affects what appears on the public profile.
+- **Search uses all locations regardless of is_public.** Sprint 12's search service queries `provider_locations` without filtering on `is_public` — a private home-base location still puts the provider in radius results. The flag only affects what appears on the public profile.
 - **No address exposure on public profiles yet.** Even for public locations, showing label + city + state is enough for MVP. Patients see "Community Health Center — Salem, OR" and contact the provider directly. Full address display is a future opt-in if providers request it. Starting restrictive and opening up is safer than the reverse.
 
 **Alternatives considered:**
 
-- **Separate `private_locations` table for travel bases:** Cleaner separation of concerns, but doubles CRUD and complicates Sprint 10's search query (UNION or two joins). The data shape is identical — a table split is organizational, not structural. The boolean achieves the same result with less code.
+- **Separate `private_locations` table for travel bases:** Cleaner separation of concerns, but doubles CRUD and complicates Sprint 12's search query (UNION or two joins). The data shape is identical — a table split is organizational, not structural. The boolean achieves the same result with less code.
 - **No is_public flag — just never show locations publicly, rely on radius search only:** Simpler, but throws away the "Main Office — Portland, OR" display that builds trust on profiles. Providers with public practices want that visibility. The flag lets each provider decide per-location.
 - **Provider-level visibility toggle instead of per-location:** A single "show my locations" toggle on the Provider record. Simpler, but doesn't handle the mixed case (EPDH who travels from home AND works at a clinic). Per-location granularity is the right level.
 
@@ -371,7 +371,7 @@ Text column, nullable. Set by admin when requesting changes or suspending. Clear
 
 The intake form should contextually guide providers toward appropriate location setup based on their situation. Two patterns:
 
-1. **Traveling/mobile providers (EPDH, mobile hygienists):** The form should lead with something like "Where do you travel from?" with helper text: *"This helps patients near you find you in search — it won't appear on your profile."* `is_public` pre-unchecked. Address fields relaxed — entering just a zip code is sufficient (geocoding backfills city/coordinates in Sprint 10). Label defaults to "Travel base" or similar, editable. Below this, an "Add a practice location" option for any public sites they also serve.
+1. **Traveling/mobile providers (EPDH, mobile hygienists):** The form should lead with something like "Where do you travel from?" with helper text: *"This helps patients near you find you in search — it won't appear on your profile."* `is_public` pre-unchecked. Address fields relaxed — entering just a zip code is sufficient (geocoding backfills city/coordinates in Sprint 11). Label defaults to "Travel base" or similar, editable. Below this, an "Add a practice location" option for any public sites they also serve.
 
 2. **Fixed-location providers (dentists, clinic-based hygienists):** The form leads with the office address, `is_public` checked by default, guided label suggestions ("Main Office", "Community Health Center", "School-Based Program", plus freeform). The private/travel option is available via "Add another location" but not front-and-center.
 
@@ -557,3 +557,34 @@ Every search is logged regardless of search mode: `search_id` (PK), `query_text`
 
 - If/when FindMyHygienist has a paid tier, real-time LLM search becomes viable as a premium feature. The batch pipeline still runs underneath to improve free-tier search.
 - The `tag_suggestions` table + acceptance rate is a natural A/B testing surface: "do Claude-suggested tags improve search-to-click conversion?"
+
+---
+
+## ADR-017: Subdomain deployment with shared-domain cookies
+
+**Date:** 2026-04-04
+**Status:** Accepted
+
+**Context:** Sprint 10 deployed the frontend and backend as separate Railway services. Each Railway service gets its own generated domain (e.g., `ohp-frontend-production.up.railway.app` and `ohp-backend-production.up.railway.app`). The auth system uses HTTP-only session cookies and a CSRF synchronizer token cookie (ADR-006). Cookies set by the backend on one Railway domain are invisible to the frontend on a different Railway domain — cross-origin cookies are blocked by default in modern browsers, and even with SameSite=None they require explicit CORS credential handling that's fragile and browser-dependent.
+
+**Decision:** Deploy both services under subdomains of `findmyhygienist.org`: frontend at `findmyhygienist.org`, backend at `api.findmyhygienist.org`. Set `cookie_domain='.findmyhygienist.org'` in the backend config so session and CSRF cookies are scoped to the parent domain and visible to both subdomains. The frontend reads `VITE_API_URL` at build time to construct API requests to `api.findmyhygienist.org`. DNS is configured with CNAME records pointing each subdomain to its Railway service.
+
+**Rationale:**
+
+- **Same cookie domain = same auth behavior as local dev.** In dev, Vite proxies `/api/*` to `localhost:8000`, so everything is same-origin. The subdomain approach preserves this: both subdomains share `.findmyhygienist.org` cookies, so the browser sends the session cookie and CSRF token on every API request without any cross-origin gymnastics. No changes to ADR-006's auth flow.
+- **CSRF stays strict.** The CSRF synchronizer token (set as a cookie by the backend, read from `document.cookie` by the frontend, sent as an `X-CSRF-Token` header) works because both services share the parent domain. A malicious site on a different domain cannot read the CSRF cookie, so the protection holds. If the services were on fully separate domains, CSRF delivery would need to switch to response-body delivery — unnecessary complexity.
+- **Clean separation for future scaling.** `api.findmyhygienist.org` can move to a different host without touching the frontend DNS. A `dev.findmyhygienist.org` subdomain is available for staging.
+- **`cookie_domain` is config, not code.** The setting lives in `config.py` as an optional field (defaults to `None` for local dev, set to `'.findmyhygienist.org'` in Railway env vars). No hardcoded domain strings in application code.
+
+**What this adds:**
+
+- `config.py`: `cookie_domain: str | None` field, defaults to `None`
+- `routes/auth.py`: login and logout set `domain=settings.cookie_domain` on both the session cookie and the CSRF cookie
+- `client.ts`: `API_BASE` reads `VITE_API_URL` env var at build time (falls back to `/api` for dev)
+- DNS: CNAME records for `findmyhygienist.org` and `api.findmyhygienist.org` pointing to their respective Railway services
+- Railway: `COOKIE_DOMAIN=.findmyhygienist.org` and `VITE_API_URL=https://api.findmyhygienist.org` env vars
+
+**Alternatives considered:**
+
+- **Reverse proxy (single domain, path-based routing):** Serve both frontend and backend behind one domain with `/api/*` routed to the backend. Eliminates the cross-subdomain problem entirely. But Railway's service model doesn't natively support path-based routing to different services without an extra proxy layer (nginx, Caddy, or Railway's edge config). Adding a proxy service increases cost and operational surface for a problem that subdomain cookies solve cleanly.
+- **Cross-origin cookies with SameSite=None + Secure + CORS credentials:** Keep Railway's generated domains and configure CORS with `Access-Control-Allow-Credentials: true`. Works in theory but is fragile — Safari and Firefox have increasingly strict third-party cookie policies, and `SameSite=None` requires the user to not have third-party cookies blocked. A directory that breaks when a provider has a privacy extension installed is not a good first impression at a conference booth.

@@ -19,7 +19,7 @@ This is an Oregon-specific project in partnership with the [Oregon Dental Hygien
 | Database | PostgreSQL (Railway) |
 | Image Storage | S3-compatible object storage (DO Spaces or Cloudflare R2) |
 | Auth | Session-based with server-side Postgres sessions (ADR-006) |
-| Deployment | Railway and/or DigitalOcean App Platform |
+| Deployment | Railway (backend + frontend as separate services), custom domain via `findmyhygienist.org` |
 
 Monorepo: `frontend/` and `backend/` at the root.
 
@@ -58,6 +58,7 @@ ohp-app/
 │   └── completed-sprints.md            # - [x] init: What's done
 ├── backend/
 │   ├── .env.example                    # - [x] Sprint 0: DATABASE_PUBLIC_URL, S3 creds, etc.
+│   ├── Procfile                        # - [x] Sprint 10: uvicorn production entrypoint for Railway
 │   ├── alembic.ini                     # - [x] Sprint 0: Alembic config
 │   ├── requirements.txt                # - [x] Sprint 0: pip dependencies
 │   ├── requirements-dev.txt            # - [x] Sprint 1: dev dependencies (pytest)
@@ -69,8 +70,8 @@ ohp-app/
 │   │       └── 8672b19c_add_is_public_to_provider_locations.py  # - [x] Sprint 5 (ADR-013)
 │   ├── app/
 │   │   ├── __init__.py
-│   │   ├── main.py                     # - [x] Sprint 0/2/4/5: FastAPI app, health check, CORS middleware, auth + profile + photo + location routers, static file serving (dev)
-│   │   ├── config.py                   # - [x] Sprint 0/2/5: Pydantic settings (DB, secret_key, session lifetime, CORS, debug, photo_upload_dir)
+│   │   ├── main.py                     # - [x] Sprint 0/2/4/5/10: FastAPI app (title='FindMyHygienist'), health check, CORS middleware, auth + profile + photo + location routers, static file serving (dev)
+│   │   ├── config.py                   # - [x] Sprint 0/2/5/10: Pydantic settings (DB, secret_key, session lifetime, CORS, debug, photo_upload_dir, cookie_domain for subdomain CSRF sharing)
 │   │   ├── database.py                 # - [x] Sprint 0: Async engine + session setup
 │   │   ├── dependencies.py            # - [x] Sprint 2: get_current_user, csrf_protect, require_admin (Depends chain)
 │   │   ├── seed.py                    # - [x] Sprint 2: CLI script to create admin User
@@ -108,7 +109,7 @@ ohp-app/
 └── frontend/
     ├── .gitignore                      # - [x] Sprint 0: Vite/Node defaults
     ├── index.html                      # - [x] Sprint 0: Vite entry point
-    ├── package.json                    # - [x] Sprint 0: React 19, react-router-dom v7, Vite 8
+    ├── package.json                    # - [x] Sprint 0/10: React 19, react-router-dom v7, Vite 8, serve (prod static hosting)
     ├── vite.config.ts                  # - [x] Sprint 0/6: Vite proxy /api/* + /uploads/* → localhost:8000
     ├── tsconfig.json                   # - [x] Sprint 0: TypeScript project references
     ├── tsconfig.app.json               # - [x] Sprint 0: app-level TS config
@@ -122,7 +123,7 @@ ohp-app/
         ├── App.css                     # - [x] Sprint 0: app styles (Vite default, to be replaced)
         ├── index.css                   # - [x] Sprint 0: global styles (Vite default, to be replaced)
         ├── api/
-        │   └── client.ts              # - [x] Sprint 0/3/6/8: typed API client — CSRF handling, auth endpoints, profile/credential/photo/location wrappers (FormData-aware), public profile fetch
+        │   └── client.ts              # - [x] Sprint 0/3/6/8/10: typed API client — CSRF handling, auth endpoints, profile/credential/photo/location wrappers (FormData-aware), public profile fetch, VITE_API_URL conditional base for prod
         ├── assets/
         │   ├── hero.png               # - [x] Sprint 0: landing page hero image
         │   └── default-avatar.svg     # - [x] Sprint 6: placeholder photo for providers who haven't uploaded one
@@ -131,7 +132,7 @@ ohp-app/
         ├── hooks/
         │   └── useSaveState.ts        # - [x] Sprint 9: shared save/error/idle state machine (extracted from IntakeProfile)
         ├── components/
-        │   ├── Layout.tsx             # - [x] Sprint 0/3/8: shell (nav + footer) with <Outlet />, auth-aware nav links, nav spacing fix
+        │   ├── Layout.tsx             # - [x] Sprint 0/3/8/10: shell (nav + footer) with <Outlet />, auth-aware nav links, nav spacing fix, FindMyHygienist branding
         │   ├── ProtectedRoute.tsx     # - [x] Sprint 3: redirects to /login if not authenticated
         │   ├── AdminRoute.tsx         # - [x] Sprint 3: redirects to / if not role=ADMIN
         │   ├── Accordion.tsx          # - [x] Sprint 6: generic collapsible section (uncontrolled open/close)
