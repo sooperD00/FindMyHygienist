@@ -4,6 +4,18 @@
      Include the actual date range, any deviations from plan, and
      links to relevant commits or PRs. Latest sprints are at the top. -->
 
+
+---
+
+## Sprint 11 — Geocoding — Backend (Day 17 4/4 Sat)
+
+**Goal:** Providers get lat/lng on their locations so search can find them by distance. Pure backend — wire Nominatim into location saves and backfill existing records.
+
+- [x] Geocoding service — port from ORToothFairy's `GeocodingService` (~30 lines Python, calls Nominatim for zip/address → lat/lng)
+- [x] Wire geocoding into provider location saves — when a provider adds/edits a ProviderLocation, call Nominatim to populate lat/lng from address or zip (ADR-004 revised)
+- [x] Backfill lat/lng on existing provider locations (one-time script or migration data fix) - or, I can re-seed using my seed script / revised seed script if that's easier, there are no real customers in either the dev or prod database right now
+- [x] Tests for geocoding service (mock Nominatim responses, verify lat/lng population on save)
+
 ---
 
 ## Sprint 10 — Early Deploy (Day 16) - DONE 4/4 10:17a

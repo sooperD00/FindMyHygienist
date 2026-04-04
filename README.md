@@ -115,7 +115,7 @@ ohp-app/
 │   │       ├── photo_service.py      # - [x] Sprint 5: photo validation, upload, delete (delegates to storage backend)
 │   │       ├── location_service.py   # - [x] Sprint 5: location CRUD, is_primary management, max-10 guard
 │   │       └── storage.py            # - [x] Sprint 5: storage abstraction — LocalStorage (dev) / S3Storage (prod, Sprint 12)
-│   └── tests/                          # - [x] PyTests: 128/128 pass
+│   └── tests/                          # - [x] PyTests: 148/148 pass
 │       ├── __init__.py
 │       ├── test_models.py              # - [x] Sprint 1: 25 tests: enum completeness, credentials.json integrity, model defaults
 │       ├── test_auth.py                # - [x] Sprint 2: 18 tests (no DB): argon2id roundtrip, pw len, token format, CSRF compare_digest, slug generation, Session model fields. No DB needed.
