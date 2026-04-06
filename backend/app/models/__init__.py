@@ -24,3 +24,4 @@ from app.models.provider import (  # noqa: F401
 )
 from app.models.feedback import Feedback  # noqa: F401
 from app.models.session import Session  # noqa: F401
+from app.models.search_log import SearchLog  # noqa: F401
