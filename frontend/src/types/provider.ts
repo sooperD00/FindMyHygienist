@@ -131,6 +131,66 @@ export interface PhotoResponse {
   photo_url: string | null;
 }
 
+// ── Search result types ──────────────────────────────────────────
+//    These mirror SearchResponse / ProviderSearchResult from
+//    routes/search.py. Different shape from PublicProfile — includes
+//    distance metadata, flattened credentials (codes only, not full
+//    objects), and no locations array.
+
+export interface ProviderSearchResult {
+  id: string;
+  slug: string;
+  display_name: string;
+  provider_type: string;
+  title_line: string | null;
+  bio: string | null;
+  mission_statement: string | null;
+  photo_url: string | null;
+  phone: string | null;
+  public_email: string | null;
+  website: string | null;
+  credentials: string[];            // code strings, not full Credential objects
+  accepting_new_patients: boolean;
+  availability: string | null;
+  tags: string[];
+  insurance_accepted: string[] | null;
+  services: string[] | null;
+  specialties: string[] | null;
+  populations_served: string[] | null;
+  languages: string[] | null;
+  distance_miles: number;
+  nearest_location_city: string | null;
+  nearest_location_state: string | null;
+}
+
+export interface SearchResponse {
+  results: ProviderSearchResult[];
+  count: number;
+  page: number;
+  per_page: number;
+  total_count: number;
+  search_location: string | null;
+}
+
+export interface ProviderTypeOption {
+  code: string;
+  label: string;
+}
+
+export interface SearchParams {
+  latitude?: number;
+  longitude?: number;
+  zipCode?: string;
+  address?: string;
+  radiusMiles?: number;
+  providerType?: string;
+  credential?: string;
+  acceptingNewPatients?: boolean;
+  insurance?: string;
+  page?: number;
+  perPage?: number;
+}
+
 // ── Public-facing types (no auth needed) ─────────────────────────
 //    These mirror PublicProfileResponse / PublicLocationResponse
 //    from routes/profile.py and routes/locations.py. The public

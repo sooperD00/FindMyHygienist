@@ -25,6 +25,9 @@ import type {
   PhotoResponse,
   ProfileUpdate,
   PublicProfile,
+  SearchParams,
+  SearchResponse,
+  ProviderTypeOption,
 } from "../types/provider";
 
 // dev, local vs main, production
@@ -155,6 +158,62 @@ export async function apiGetPublicProfile(
   id: string
 ): Promise<PublicProfile> {
   const res = await apiFetch(`/providers/${slug}/${id}`);
+  return res.json();
+}
+
+// ── Search (public) ──────────────────────────────────────────────
+
+/**
+ * Search providers by location + filters.
+ *
+ * Different shape from the path-based wrappers above: takes an object
+ * of query params, builds URLSearchParams, returns a paginated
+ * SearchResponse with distance metadata.
+ * 
+ * Does not accept `featured` as a param - this is for real searches only
+ * (separate endpoing for `featured` only is intentional design)
+ */
+
+// TODO: Extract a toSearchParams() utility that strips null/undefined
+// and builds URLSearchParams in a loop. Every new filter currently
+// adds two lines here; the utility makes it one key-value entry.
+
+export async function apiSearchProviders(
+  params: SearchParams
+): Promise<SearchResponse> {
+  const qs = new URLSearchParams();
+
+  if (params.latitude != null) qs.set("latitude", String(params.latitude));
+  if (params.longitude != null) qs.set("longitude", String(params.longitude));
+  if (params.zipCode) qs.set("zipCode", params.zipCode);
+  if (params.address) qs.set("address", params.address);
+  if (params.radiusMiles != null)
+    qs.set("radiusMiles", String(params.radiusMiles));
+  if (params.providerType) qs.set("providerType", params.providerType);
+  if (params.credential) qs.set("credential", params.credential);
+  if (params.acceptingNewPatients != null)
+    qs.set("acceptingNewPatients", String(params.acceptingNewPatients));
+  if (params.insurance) qs.set("insurance", params.insurance);
+  if (params.page != null) qs.set("page", String(params.page));
+  if (params.perPage != null) qs.set("perPage", String(params.perPage));
+
+  const res = await apiFetch(`/providers?${qs.toString()}`);
+  return res.json();
+}
+
+/**
+ * Featured providers for the landing page — no location input needed.
+ */
+export async function apiFeaturedProviders(): Promise<SearchResponse> {
+  const res = await apiFetch("/providers/featured");
+  return res.json();
+}
+
+/**
+ * Provider type enum values for filter dropdowns.
+ */
+export async function apiGetProviderTypes(): Promise<ProviderTypeOption[]> {
+  const res = await apiFetch("/providers/types");
   return res.json();
 }
 
