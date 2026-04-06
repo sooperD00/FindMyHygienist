@@ -41,11 +41,12 @@ There is one admin user (Nicole) who reviews and approves provider profiles befo
 
 ## Data Model
 
-<!-- Six tables. User holds auth for everyone (providers and Nicole).
+<!-- Seven tables. User holds auth for everyone (providers and Nicole).
      Provider is the public-facing profile. Credential is a reference
      table seeded from Oregon licensing data. ProviderCredential is the
      join. ProviderLocation supports multi-site practitioners.
-     Feedback is standalone. See ADR-009 and ADR-010. -->
+     Feedback is standalone. SearchLog records anonymous search analytics.
+     See ADR-009 and ADR-010. -->
 
 ### User (auth identity — everyone)
 
@@ -195,6 +196,22 @@ Seed data (17 entries):
 | `created_at` | datetime | |
 | `resolved` | bool | Default false |
 
+### SearchLog (anonymous search analytics)
+
+<!-- Fire-and-forget: the search endpoint inserts asynchronously and
+     never blocks the response on a failed write. No PII — query_text
+     is the raw location input (zip/address), not patient identity.
+     Feeds ADR-016 batch tag suggestion pipeline and product analytics. -->
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | UUID | PK |
+| `query_text` | text | Nullable — raw location input (zip, address, or blank for lat/lng) |
+| `filters_applied` | JSONB | Nullable — which filters the search used (provider_type, credential, tag, etc.) |
+| `result_provider_ids` | JSONB | Nullable — provider UUIDs returned |
+| `result_count` | int | Dedicated column — cheaper than computing from JSONB length |
+| `created_at` | datetime | Server-side `func.now()` |
+
 ---
 
 ## PII Considerations
@@ -216,7 +233,7 @@ Seed data (17 entries):
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/providers` | Search/list providers. Query params: `city`, `zip`, `lat`/`lng`/`radius`, `provider_type`, `specialty`, `insurance`, `tag`, `keyword`, `page`, `per_page` |
+| `GET` | `/api/providers` | Search/list providers. Query params: `lat`/`lng`/`radius`, `zip`, `address`, `provider_type`, `credential`, `accepting_new_patients`, `tag`, `insurance`, `page`, `per_page`. Approved only. Excludes `example-profile` tagged providers by default; `featured=true` returns only example providers (landing page showcase). |
 | `GET` | `/api/providers/{slug}/{id}` | Full provider profile (approved only), includes credentials with patient descriptions |
 | `GET` | `/api/providers/types` | Enum values for provider types |
 | `GET` | `/api/providers/specialties` | Distinct specialty values (for filter UI) |
@@ -289,31 +306,20 @@ Seed data (17 entries):
 
 ## Nearest-Provider Search (Haversine)
 
-The search page needs to answer "find providers near me" by city name, zip code, or lat/lng.
+The search page answers "find providers near me" by city name, zip code, or lat/lng.
 
-**Geocoding:** When a user searches by city or zip, the backend needs to convert that to lat/lng. Options:
+**Geocoding:** When a user searches by city or zip, the backend converts that to lat/lng via Nominatim (implemented Sprint 11, ADR-004 revised). Provider locations are geocoded on create/update; patient search queries are geocoded at request time.
 
-1. **Static lookup table** — preload Oregon cities/zips with their centroids. ~400 cities, ~500 zips. No external API call needed. Good enough for MVP.
-2. **Geocoding API** (Google, Mapbox, Nominatim) — more accurate, handles partial input, but adds a dependency and possibly cost.
+**Distance query:** Sprint 12 implements Haversine in Python application code (ported from ORToothFairy's C# `SearchService`). At Oregon scale (hundreds of providers, not millions), loading approved providers into memory and filtering in Python is fast enough. The search respects both the user's search radius AND each provider's `max_travel_miles`. Example-profile providers are excluded by default; `featured=true` returns only example providers (powers the landing page showcase in Sprint 13).
 
-Recommendation: static lookup for MVP, geocoding API later if needed.
-
-**Distance query:** Postgres can do Haversine math in SQL. For the scale of Oregon providers (hundreds, not millions), a simple `WHERE` clause with the Haversine formula is fast enough — no PostGIS or spatial index needed. If it ever gets slow, add a bounding-box pre-filter.
+**Search logging:** Every search is logged to `search_logs` (fire-and-forget — doesn't block the response). Feeds ADR-016's batch tag suggestion pipeline and general product analytics.
 
 ```sql
--- Haversine in Postgres (returns miles)
-SELECT p.*, (
-    3959 * acos(
-        cos(radians(:lat)) * cos(radians(pl.latitude))
-        * cos(radians(pl.longitude) - radians(:lng))
-        + sin(radians(:lat)) * sin(radians(pl.latitude))
-    )
-) AS distance
-FROM providers p
-JOIN provider_locations pl ON p.id = pl.provider_id
-WHERE p.status = 'APPROVED'
-ORDER BY distance
-LIMIT 20;
+-- Haversine reference (the actual implementation is in Python, not SQL)
+-- 3959 * acos(cos(radians(lat1)) * cos(radians(lat2))
+--   * cos(radians(lng2) - radians(lng1))
+--   + sin(radians(lat1)) * sin(radians(lat2)))
+-- Returns distance in miles
 ```
 
 ---

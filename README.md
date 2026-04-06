@@ -83,10 +83,11 @@ ohp-app/
 │   │   └── versions/
 │   │       ├── 1b74b34a_initial_schema_6_tables.py   # - [x] Sprint 1
 │   │       ├── f9bd8a66_add_sessions_table.py        # - [x] Sprint 2
-│   │       └── 8672b19c_add_is_public_to_provider_locations.py  # - [x] Sprint 5 (ADR-013)
+│   │       ├── 8672b19c_add_is_public_to_provider_locations.py  # - [x] Sprint 5 (ADR-013)
+│   │       └── b03726672af4_add_search_logs_table.py            # - [x] Sprint 12
 │   ├── app/
 │   │   ├── __init__.py
-│   │   ├── main.py                     # - [x] Sprint 0/2/4/5/10: FastAPI app (title='FindMyHygienist'), health check, CORS middleware, auth + profile + photo + location routers, static file serving (dev)
+│   │   ├── main.py                     # - [x] Sprint 0/2/4/5/10/12: FastAPI app (title='FindMyHygienist'), health check, CORS middleware, auth + profile + photo + location + search routers, static file serving (dev)
 │   │   ├── config.py                   # - [x] Sprint 0/2/5/10: Pydantic settings (DB, secret_key, session lifetime, CORS, debug, photo_upload_dir, cookie_domain for subdomain CSRF sharing)
 │   │   ├── database.py                 # - [x] Sprint 0: Async engine + session setup
 │   │   ├── dependencies.py            # - [x] Sprint 2: get_current_user, csrf_protect, require_admin (Depends chain)
@@ -99,6 +100,7 @@ ohp-app/
 │   │   │   ├── credential.py           # - [x] Sprint 1: Credential (reference table, seeded from credentials.json)
 │   │   │   ├── provider.py             # - [x] Sprint 1: Provider, ProviderCredential, ProviderLocation
 │   │   │   ├── feedback.py             # - [x] Sprint 1: Feedback
+│   │   │   ├── search_log.py          # - [x] Sprint 12: SearchLog — anonymous search analytics (JSONB filters, fire-and-forget)
 │   │   │   └── session.py             # - [x] Sprint 2: Server-side session (id, user_id, csrf_token, expires_at)
 │   │   ├── data/
 │   │   │   └── credentials.json        # - [x] Sprint 1: 17 Oregon credential seed entries
@@ -107,7 +109,8 @@ ohp-app/
 │   │   │   ├── auth.py                # - [x] Sprint 2: register, login, logout, me
 │   │   │   ├── profile.py            # - [x] Sprint 4: credentials list, own profile CRUD, public profile
 │   │   │   ├── photo.py              # - [x] Sprint 5: upload + delete profile photo
-│   │   │   └── locations.py          # - [x] Sprint 5: location CRUD (list/create/patch/delete)
+│   │   │   ├── locations.py          # - [x] Sprint 5: location CRUD (list/create/patch/delete)
+│   │   │   └── search.py            # - [x] Sprint 12: GET /api/providers (distance+filter search), GET /api/providers/types, /specialties
 │   │   └── services/
 │   │       ├── __init__.py             # - [x] Sprint 0: scaffold
 │   │       ├── auth_service.py        # - [x] Sprint 2: argon2id hashing, register_provider, authenticate_user, slug generation
@@ -116,6 +119,7 @@ ohp-app/
 │   │       ├── photo_service.py      # - [x] Sprint 5: photo validation, upload, delete (delegates to storage backend)
 │   │       ├── geocoding_service.py  # - [x] Sprint 11: Nominatim geocoding — zip and address to lat/lng (ADR-004 revised)
 │   │       ├── location_service.py   # - [x] Sprint 5/11: location CRUD, is_primary management, max-10 guard, geocode on create/update
+│   │       ├── search_service.py    # - [x] Sprint 12: Haversine distance search, filter combinations, pagination, example-profile exclusion, search logging
 │   │       └── storage.py            # - [x] Sprint 5: storage abstraction — LocalStorage (dev) / S3Storage (prod, Sprint 12)
 │   └── tests/                          # - [x] PyTests: 170/170 pass
 │       ├── __init__.py
@@ -124,7 +128,8 @@ ohp-app/
 │       ├── test_profile.py             # - [x] Sprint 4: 29 tests (no DB): schema validation, EDITABLE_FIELDS whitelist, response field presence (OwnProfile has draft+status, PublicProfile omits them), enum serialization sanity
 │       ├── test_photo.py               # - [x] Sprint 5: 28 tests (no DB): file validation (type, size, empty), storage abstraction, upload/delete flows, photo_url lifecycle
 │       ├── test_locations.py           # - [x] Sprint 5: 28 tests (no DB): location CRUD schemas, is_primary logic, is_public filtering, max-10 limit, public vs own response fields
-│       └── test_geocoding.py          # - [x] Sprint 11: 20 tests (no DB): geocode_zip, geocode_address, _geocode_location fallback chain, geocode-on-create/update integration
+│       ├── test_geocoding.py          # - [x] Sprint 11: 20 tests (no DB): geocode_zip, geocode_address, _geocode_location fallback chain, geocode-on-create/update integration
+│       └── test_search.py            # - [x] Sprint 12: 22 tests (no DB): Haversine math, filter combinations, pagination, empty results, search logging, example-profile exclusion + featured filter
 └── frontend/
     ├── .gitignore                      # - [x] Sprint 0: Vite/Node defaults
     ├── index.html                      # - [x] Sprint 0: Vite entry point
