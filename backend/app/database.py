@@ -28,3 +28,7 @@ async def get_session():
     """Dependency: yields an async database session per request."""
     async with async_session() as session:
         yield session
+
+def get_engine():
+    """Expose the engine for background tasks that create their own sessions (for BackgroundTasks)."""
+    return engine
