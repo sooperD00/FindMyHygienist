@@ -7,6 +7,24 @@
 
 ---
 
+## Sprint 12 — Search API Core — Backend (Day 19) - DONE 4/6 12:29p
+
+**Goal:** Core search endpoint fully testable via Swagger / curl before frontend work begins. This is the ORToothFairy port — the C# is the spec, and the output is a working distance+filter search. One context window.
+
+- [x] Search service — port from ORToothFairy's `SearchService` (Haversine in application code, filters by user search radius AND provider `max_travel_miles`)
+- [x] `GET /api/providers` — three input methods (lat/lng, zip, address), plus filters (provider_type, credential, accepting_new_patients, tag, insurance, pagination). Returns approved providers only. Excludes `example-profile` tagged providers by default; `featured=true` param returns *only* example providers (powers the landing state in Sprint 13).
+- [x] `GET /api/providers/types` etc — for filter dropdowns
+- [x] `search_log` table + migration — `search_id`, `query_text` (nullable), `filters_applied` (JSONB), `result_provider_ids`, `result_count`, `created_at`. No PII. Feeds ADR-016 and product analytics. Log every search query (fire-and-forget, doesn't block response).
+- [x] Tests — Haversine math, filter combinations, pagination, empty results, search logging, example-profile exclusion + featured filter
+
+<!-- The core search is a translation sprint — the C# is the spec.
+     ~170 lines of C# → ~100 lines of Python. Search log rides along
+     because it's one table + one fire-and-forget insert, not a
+     separate shape of work. Tag filtering and full-text search are
+     separate context windows (post-conference). -->
+
+---
+
 ## Sprint 11 — Geocoding — Backend (Day 17) - DONE 4/4 1:45p
 
 **Goal:** Providers get lat/lng on their locations so search can find them by distance. Pure backend — wire Nominatim into location saves and backfill existing records.
