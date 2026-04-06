@@ -229,6 +229,45 @@ async def search_providers(
     return response
 
 
+# ── Oregon geographic centroid — used as the reference point for
+#    featured providers so distance_miles shows a realistic value
+#    (roughly "distance from the center of the state") rather than 0.
+#    No user input needed; this is a display-only number.
+OREGON_CENTROID_LAT = 43.8041
+OREGON_CENTROID_LON = -120.5542
+FEATURED_MAX = 20
+
+
+@router.get("/api/providers/featured", response_model=SearchResponse)
+async def get_featured_providers(
+    db: AsyncSession = Depends(get_session),
+):
+    """Featured (example-profile) providers for the landing page.
+
+    Lightweight endpoint — no location input required. Uses the Oregon
+    geographic centroid as the reference point so distance_miles values
+    look natural ("~45 mi" from center of state) rather than 0.
+
+    No search logging — this isn't a real search, it's a showcase.
+    """
+    results, total_count = await search_service.search_providers(
+        db,
+        OREGON_CENTROID_LAT,
+        OREGON_CENTROID_LON,
+        featured=True,
+    )
+
+    return SearchResponse(
+        results=[ProviderSearchResult(**r) for r in results],
+        count=len(results),
+        page=1,
+        count=len(results),
+        per_page=FEATURED_MAX,
+        total_count=total_count,
+        search_location="Oregon",
+    )
+
+
 @router.get("/api/providers/types", response_model=list[ProviderTypeResponse])
 async def get_provider_types():
     """Provider type enum values for the search filter dropdown.
