@@ -236,7 +236,7 @@ Seed data (17 entries):
 | `GET` | `/api/providers` | Search/list providers. Query params: `lat`/`lng`/`radius`, `zip`, `address`, `provider_type`, `credential`, `accepting_new_patients`, `tag`, `insurance`, `page`, `per_page`. Approved only. Excludes `example-profile` tagged providers by default; `featured=true` returns only example providers (landing page showcase). |
 | `GET` | `/api/providers/{slug}/{id}` | Full provider profile (approved only), includes credentials with patient descriptions |
 | `GET` | `/api/providers/types` | Enum values for provider types |
-| `GET` | `/api/providers/specialties` | Distinct specialty values (for filter UI) |
+| `GET` | `/api/providers/specialties` | *Deferred* — distinct specialty values for filter UI (post-conference, semantic search) |
 | `GET` | `/api/credentials` | All valid credential codes with full_name, patient_description, type (powers intake form + tappable chips) |
 | `POST` | `/api/feedback` | Submit feedback or report an issue |
 

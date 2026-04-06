@@ -120,7 +120,7 @@ ohp-app/
 │   │       ├── geocoding_service.py  # - [x] Sprint 11: Nominatim geocoding — zip and address to lat/lng (ADR-004 revised)
 │   │       ├── location_service.py   # - [x] Sprint 5/11: location CRUD, is_primary management, max-10 guard, geocode on create/update
 │   │       ├── search_service.py    # - [x] Sprint 12: Haversine distance search, filter combinations, pagination, example-profile exclusion, search logging
-│   │       └── storage.py            # - [x] Sprint 5: storage abstraction — LocalStorage (dev) / S3Storage (prod, Sprint 12)
+│   │       └── storage.py            # - [x] Sprint 5: storage abstraction — LocalStorage (dev), S3Storage interface ready (Sprint 16)
 │   └── tests/                          # - [x] PyTests: 170/170 pass
 │       ├── __init__.py
 │       ├── test_models.py              # - [x] Sprint 1: 25 tests: enum completeness, credentials.json integrity, model defaults
