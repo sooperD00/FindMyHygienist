@@ -4,6 +4,7 @@ FastAPI app instance, router includes, middleware.
 Sprint 2: auth router + CORS middleware.
 Sprint 4: profile router (credentials, own profile, public profiles).
 Sprint 5: photo router, location router, static file serving for dev photos.
+Sprint 12: search router (provider search + filter dropdowns).
 CORS is configured now (even though Vite proxy handles dev) so it
 doesn't bite us in Sprint 7 when prod needs it. See remaining-sprints.md.
 """
@@ -21,6 +22,7 @@ from app.routes.auth import router as auth_router
 from app.routes.locations import router as location_router
 from app.routes.photo import router as photo_router
 from app.routes.profile import router as profile_router
+from app.routes.search import router as search_router
 
 
 @asynccontextmanager
@@ -47,6 +49,7 @@ app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(photo_router)
 app.include_router(location_router)
+app.include_router(search_router)
 
 # ── Static file serving (dev only) ────────────────────────────────
 # In dev, serve uploaded photos from the local filesystem.
