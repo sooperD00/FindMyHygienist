@@ -10,7 +10,6 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
-import Home from "./pages/Home";
 import Search from "./pages/Search";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
@@ -26,7 +25,7 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Search />} />
             <Route path="/providers/or/:city" element={<Search />} />
             <Route path="/providers/:slug/:id" element={<Profile />} />
             <Route path="/about" element={<About />} />

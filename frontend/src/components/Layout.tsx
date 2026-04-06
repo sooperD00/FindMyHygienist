@@ -28,7 +28,7 @@ function Layout() {
       <nav className="site-nav">
         <Link to="/" className="site-nav-brand">FindMyHygienist</Link>
         <div className="site-nav-links">
-          <Link to="/providers/or/portland">Find a Provider</Link>
+          <Link to="/">Find a Provider</Link>
           <Link to="/about">About</Link>
 
           {/* Auth-dependent nav items — hidden while loading to avoid
