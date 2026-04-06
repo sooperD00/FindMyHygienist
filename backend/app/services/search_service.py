@@ -121,18 +121,39 @@ async def search_providers(
         )
 
     # ── 4. Calculate distances and filter ──
-    # scored: list[tuple[Provider, float, ProviderLocation | None]] = [] # no, you continue when there are no geocoded locations, remove None
-    scored: list[tuple[Provider, float, ProviderLocation ]] = []
+    # featured path can append closest_loc=None (example provider with no geocoded locations)
+    scored: list[tuple[Provider, float, ProviderLocation | None]] = []
 
     for provider in providers:
         # ── Tag filtering (example-profile) ──
         tags = provider.tags or []
         is_example = "example-profile" in tags
-        if featured and not is_example:
-            continue
-        if not featured and is_example:
+        
+        
+        # ── Featured path: collect example providers, skip all filters ──
+        if featured:
+            if not is_example:
+                continue
+            # Calculate distance for display, but don't filter on it
+            locs = locations_by_provider.get(provider.id, [])
+            geocoded_locs = [
+                loc for loc in locs
+                if loc.latitude is not None and loc.longitude is not None
+            ]
+            if geocoded_locs:
+                closest_loc = min(geocoded_locs, key=lambda l: haversine(lat, lon, l.latitude, l.longitude))
+                dist = haversine(lat, lon, closest_loc.latitude, closest_loc.longitude)
+            else:
+                closest_loc = None
+                dist = 0.0
+            scored.append((provider, dist, closest_loc))
             continue
 
+        # ── Normal search: exclude examples, apply all filters ──
+        if is_example:
+            continue  # exclude examples in normal search results, then continue to real filters etc
+
+        # ── Real filters ──
         # ── Filter: provider_type ──
         if provider_type and provider.provider_type.value != provider_type:
             continue
