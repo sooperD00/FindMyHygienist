@@ -78,6 +78,9 @@ function ProviderCard({ provider, showDistance = true }: ProviderCardProps) {
               {provider.credentials.join(", ")}
             </span>
           )}
+          {provider.credentials.length > 0 && provider.title_line && (
+            <span className="provider-card-separator"> · </span> /* add dot separator here so you can do it conditionally (and not in the css) */
+          )}
           {provider.title_line && (
             <span className="provider-card-title-line">
               {provider.title_line}
