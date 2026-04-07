@@ -160,7 +160,7 @@ async def update_provider_profile(
     if provider.status == ProviderStatus.SUSPENDED:
         raise ValueError("Cannot edit a suspended profile")
 
-    if provider.status == ProviderStatus.APPROVED:
+    if provider.status == ProviderStatus.APPROVED and not provider.auto_approved:
         # Merge into existing draft (there might already be pending edits).
         # Draft is a JSON column — enums must be serialized to strings.
         json_safe = {
