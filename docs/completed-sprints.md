@@ -7,6 +7,15 @@
 
 ---
 
+## Fixes from feedback 4/6/2026 - DONE 4/7 10:50a
+
+- [x] Auth not working on mobile
+- [x] is registration dropdown writing max_distance?
+- [x] autoapprove = true needs to allow draft changes to auto-update when the conference env var is true (not just user approved)
+- [x] tag and release v0.1.0
+
+---
+
 ## Sprint 13 — Search Page (= Landing Page) — Frontend (Day 19) 4/6 5:15p
 
 **Goal:** The search page IS the landing page. Visitors hit `findmyhygienist.org` and see example providers in result cards — the directory looks alive. They search, and the examples step aside for real results. This is the second conference demo surface (after the profile page).
