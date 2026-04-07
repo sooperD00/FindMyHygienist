@@ -7,6 +7,31 @@
 
 ---
 
+## Sprint 13 — Search Page (= Landing Page) — Frontend (Day 19) 4/6 5:15p
+
+**Goal:** The search page IS the landing page. Visitors hit `findmyhygienist.org` and see example providers in result cards — the directory looks alive. They search, and the examples step aside for real results. This is the second conference demo surface (after the profile page).
+
+- [x] Extend client.ts with typed API wrappers: `apiSearchProviders` (query params + pagination return type — different shape from existing path-based wrappers), `apiGetProviderTypes`
+- [x] Landing state (no search query yet) — fetch example providers via `GET /api/providers?featured=true`, render in result cards. Headline copy that signals what the directory is ("Oregon's dental hygienists, in their own words" or similar). Search bar above, example profiles below as showcase.
+- [x] Active search state (user entered zip/city) — fetch real results from `GET /api/providers` (example-profile providers excluded automatically by backend). Result cards with truncated bios above the fold, provider photo + name + credential chips + contact.
+- [x] "List with us" CTA for providers visiting the search page
+- [x] Location input — zip code field (primary), city name, or browser geolocation button
+- [x] Radius selector (5, 10, 25 miles, or "show all")
+- [x] Filter dropdowns wired to `/api/providers/types` (specialties dropdown deferred to post-conference semantic search)
+- [x] Route change: `/` renders Search (retire Home.tsx stub). Keep `/providers/or/:city` as an alias or redirect if needed for SEO later.
+- [x] Educational triage stub text on search page (placeholder content, not interactive)
+
+<!-- The Search component handles both states — landing (featured
+     providers) and active search (real results). Single component,
+     two states. No separate Home page to maintain.
+
+     seed_demo.py providers are the landing state content. They
+     exercise different feature paths (mobile, multi-location,
+     bilingual, anxiety-aware) so the landing page showcases
+     the directory's range. -->
+
+---
+
 ## Sprint 12 — Search API Core — Backend (Day 19) - DONE 4/6 12:29p
 
 **Goal:** Core search endpoint fully testable via Swagger / curl before frontend work begins. This is the ORToothFairy port — the C# is the spec, and the output is a working distance+filter search. One context window.
