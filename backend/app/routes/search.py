@@ -261,7 +261,6 @@ async def get_featured_providers(
         results=[ProviderSearchResult(**r) for r in results],
         count=len(results),
         page=1,
-        count=len(results),
         per_page=FEATURED_MAX,
         total_count=total_count,
         search_location="Oregon",
