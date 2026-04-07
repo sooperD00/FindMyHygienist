@@ -69,6 +69,12 @@ def _set_session_cookies(response: Response, session) -> None:
     # Cross-origin cookies (prod) require SameSite=None + Secure.
     # Same-origin (local dev via Vite proxy) uses Lax.
     # "none" is ok, you have csrf token pattern, but you implemented shared domain (subdomain for api) in prod, so you can use lax now
+    # Lax means: the cookie is sent on top-level navigations (clicking a link) 
+    # and same-site requests, but not on cross-site subresource requests 
+    # (fetch/XHR from a different site). The key distinction: same-site ≠ same-origin
+    # findmyhygienist.org and api.findmyhygienist.org are different origins but the same 
+    # site (they share the registrable domain findmyhygienist.org). So SameSite=Lax will 
+    # allow the cookies through. You do not need SameSite=None here — Lax is correct and more secure.
     samesite ="lax"  
     max_age = settings.session_lifetime_hours * 3600
     # Share cookies across subdomains in prod (findmyhygienist.org + api.findmyhygienist.org)
