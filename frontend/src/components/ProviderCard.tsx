@@ -30,7 +30,7 @@ function formatPhone(phone: string): string {
   return phone;
 }
 
-function truncateBio(bio: string, maxLen = 200): string {
+export function truncateBio(bio: string, maxLen = 200): string {
   // pure function at module scope - so you can unit test independently
   if (bio.length <= maxLen) return bio;
   // Cut at last space before maxLen to avoid mid-word truncation
