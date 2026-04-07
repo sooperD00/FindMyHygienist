@@ -143,11 +143,11 @@ ohp-app/
     ├── public/                         # - [x] Sprint 0: static assets (Vite default)
     └── src/
         ├── main.tsx                    # - [x] Sprint 0: React DOM entry point
-        ├── App.tsx                     # - [x] Sprint 0/3: routing table with AuthProvider, ProtectedRoute, AdminRoute
+        ├── App.tsx                     # - [x] Sprint 0/3/13: routing table with AuthProvider, ProtectedRoute, AdminRoute. '/' renders Search (Sprint 13)
         ├── App.css                     # - [x] Sprint 0: app styles (Vite default, to be replaced)
         ├── index.css                   # - [x] Sprint 0: global styles (Vite default, to be replaced)
         ├── api/
-        │   └── client.ts              # - [x] Sprint 0/3/6/8/10: typed API client — CSRF handling, auth endpoints, profile/credential/photo/location wrappers (FormData-aware), public profile fetch, VITE_API_URL conditional base for prod
+        │   └── client.ts              # - [x] Sprint 0/3/6/8/10/13: typed API client — CSRF handling, auth endpoints, profile/credential/photo/location wrappers (FormData-aware), public profile fetch, search/provider-types wrappers, VITE_API_URL conditional base for prod
         ├── assets/
         │   ├── hero.png               # - [x] Sprint 0: landing page hero image
         │   └── default-avatar.svg     # - [x] Sprint 6: placeholder photo for providers who haven't uploaded one
@@ -167,10 +167,10 @@ ohp-app/
         │   ├── LocationEntry.tsx      # - [x] Sprint 6/9: location CRUD — add/toggle is_public/delete, ADR-013 guided UX, inline edit mode (Sprint 9)
         │   ├── PhotoUpload.tsx        # - [x] Sprint 6: profile photo upload/delete with preview
         │   ├── ProfileEditor.tsx      # - [x] Sprint 9: 10-section accordion form (photo, bio, credentials, contact, specialties, locations, insurance, languages, availability, tags) — reused by IntakeProfile and Dashboard
+        │   ├── ProviderCard.tsx       # - [x] Sprint 13: search result card — photo, name, credential chips, truncated bio, contact info
         │   └── SaveButton.tsx         # - [x] Sprint 9: shared save/error button wired to useSaveState
         ├── pages/
-        │   ├── Home.tsx               # - [x] Sprint 0: stub
-        │   ├── Search.tsx             # - [x] Sprint 0: stub
+        │   ├── Search.tsx             # - [x] Sprint 0/13: landing page AND search — featured example providers when no query, real results on search. Zip/city/geolocation input, radius selector, provider type filter, 'List with us' CTA
         │   ├── Profile.tsx            # - [x] Sprint 0/8: public provider profile — hero, credentials, contact, bio, details, locations, report link
         │   ├── About.tsx              # - [x] Sprint 0: stub
         │   ├── Join.tsx               # - [x] Sprint 3/6: 3-step wizard — account creation, intake profile (IntakeProfile), confirmation
@@ -195,6 +195,9 @@ ohp-app/
             ├── Join.test.tsx           # - [x] Sprint 7: Step 1 form renders, logged-in skip to Step 2, registration→Step 2 transition (3 tests, mocks useAuth + API client via vi.hoisted)
             ├── Profile.test.tsx        # Sprint 8: 22 tests - public profile page — hero, credentials, contact, bio, details, locations, error states
             ├── Dashboard.test.tsx      # - [x] Sprint 9: 13 tests — dashboard layout, status badge, ProfileEditor integration, edit mode, compact summary
+            # Sprint 13: search page tests
+            ├── ProviderCard.test.ts   # - [x] Sprint 13: card rendering, truncation, credential chips, missing-field fallbacks
+            ├── client-search.test.ts  # - [x] Sprint 13: apiSearchProviders query param wiring, apiGetProviderTypes
 
 ```
 

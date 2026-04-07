@@ -283,8 +283,7 @@ Seed data (17 entries):
 
 | Route | Page | Notes |
 |-------|------|-------|
-| `/` | Landing / Search | Could be a landing page with search bar that redirects to `/providers/or/:city`, or could go straight to the search page. Decide in sprint. |
-| `/providers/or/:city` | Search Results | Modeled after PsychologyToday's city search. 3 truncated bios above the fold, photo + name + credentials + truncated bio + contact. Filters at top. Keyword search. "List with us" CTA. Educational triage stub text. |
+| `/` | Search | The landing page IS the search page (Sprint 13). No query → featured example providers as showcase. Active search → real results by zip/city/geolocation with radius and provider type filters. ProviderCard components with truncated bios above the fold. 'List with us' CTA. Educational triage stub text. |
 | `/providers/:slug/:id` | Provider Profile | Full profile page. Bio, credentials, services, specialties, populations, locations with map, contact info. "Report an issue" link at bottom. |
 | `/about` | About / Education | What FindMyHygienist is, what different provider types do, FAQ, educational triage content. |
 | `/join` | Provider Signup | Intake form — account creation + initial profile all in one flow. |
