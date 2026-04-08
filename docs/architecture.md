@@ -186,14 +186,21 @@ Seed data (17 entries):
 
 ### Feedback / Reports
 
+<!-- Sprint 14 built POST /api/feedback and a dedicated Feedback page.
+     Feedback goes to the database table — no email is sent. Nicole
+     queries the table directly (Railway console) until the admin UI
+     ships post-conference. -->
+
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | UUID | PK |
 | `type` | enum | `REPORT_ISSUE`, `GENERAL_FEEDBACK` |
+| `is_authenticated` | bool | Default false — true when a logged-in user submits |
+| `submitted_by_user_id` | UUID | FK → User, nullable — set when authenticated, never forced |
 | `provider_id` | UUID | FK → Provider, nullable (feedback may not target a specific provider) |
-| `reporter_email` | str | Optional, if they want a reply |
-| `message` | text | |
-| `created_at` | datetime | |
+| `reporter_email` | str | Optional, typed into the form — not auto-filled from the user record |
+| `message` | text | Max 10,000 chars (DB check constraint) |
+| `created_at` | datetime | Server-side `func.now()` |
 | `resolved` | bool | Default false |
 
 ### SearchLog (anonymous search analytics)
@@ -285,7 +292,8 @@ Seed data (17 entries):
 |-------|------|-------|
 | `/` | Search | The landing page IS the search page (Sprint 13). No query → featured example providers as showcase. Active search → real results by zip/city/geolocation with radius and provider type filters. ProviderCard components with truncated bios above the fold. 'List with us' CTA. Educational triage stub text. |
 | `/providers/:slug/:id` | Provider Profile | Full profile page. Bio, credentials, services, specialties, populations, locations with map, contact info. "Report an issue" link at bottom. |
-| `/about` | About / Education | What FindMyHygienist is, what different provider types do, FAQ, educational triage content. |
+| `/about` | About / Education | What FindMyHygienist is, what different provider types do, FAQ, educational triage content. Link to ODHA. |
+| `/feedback` | Feedback | Submit feedback or report an issue. Writes to the `feedback` table — no email sent. Reached via 'Report an issue' on provider profiles (pre-fills provider_id and type) or 'Give us feedback' in the footer. |
 | `/join` | Provider Signup | Intake form — account creation + initial profile all in one flow. |
 | `/login` | Provider Login | |
 
@@ -378,9 +386,15 @@ Set `AUTO_APPROVE=true` in environment. Registration flow skips the queue — st
 
 ## Feedback & Issue Reporting
 
-Two entry points, same backend:
+Two entry points, same backend endpoint (`POST /api/feedback`), same database table:
 
-1. **"Report an issue"** — small gray link at bottom of each provider profile. Sends email to Nicole and creates a `Feedback` row with `type=REPORT_ISSUE` and the `provider_id`.
-2. **"Give us feedback"** — link in nav or footer. General feedback, not tied to a specific provider.
+1. **"Report an issue"** — small gray link at bottom of each provider profile. Links to `/feedback?type=REPORT_ISSUE&provider_id=...` so the form pre-fills the provider context.
+2. **"Give us feedback"** — link in the footer. General feedback, not tied to a specific provider.
 
-MVP email delivery: use a transactional email service (Resend, Mailgun, or even just SMTP to Gmail). The email is a notification to Nicole; the canonical record is the database row.
+Both write a row to the `feedback` table. No email is sent — Nicole reviews feedback by querying the table directly (Railway console) until the admin UI ships post-conference. The feedback endpoint is unauthenticated but captures `submitted_by_user_id` when a logged-in user submits, so admin review can distinguish anonymous visitors from providers.
+
+<!-- Future: email notifications when feedback is submitted (so Nicole
+     doesn't have to poll the table) are a post-conference nice-to-have.
+     The admin UI (deferred) will surface feedback alongside the provider
+     review queue. Rate limiting on the endpoint is tracked in
+     remaining-sprints.md housekeeping. -->
