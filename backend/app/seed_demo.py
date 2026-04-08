@@ -10,6 +10,10 @@ Creates 4 example providers with locations that have hardcoded lat/lng
 coordinates (looked up from Nominatim once, baked in here so the seed
 is deterministic and doesn't require network access).
 
+Sprint 15: generates placeholder avatar images (colored circles with
+initials via Pillow) and uploads them through the storage backend so
+demo providers have photos on the landing page at the booth.
+
 Profiles are based on real Oregon dental hygienist archetypes — EPDH
 mobile provider, diagnostics-focused RDH, anxiety-aware prevention
 specialist, and bilingual community health provider. Display names are
@@ -25,7 +29,10 @@ Why a separate file from seed.py:
 """
 
 import asyncio
+import io
 import uuid
+
+from PIL import Image, ImageDraw, ImageFont
 
 from app.config import settings
 from app.database import async_session, engine
@@ -38,6 +45,56 @@ from app.models.enums import (
 from app.models.provider import Provider, ProviderCredential, ProviderLocation
 from app.models.user import User
 from app.services.auth_service import hash_password, get_user_by_email
+from app.services.storage import get_storage_backend
+from app.services.photo_service import photo_key
+
+# ── Avatar generation ────────────────────────────────────────────
+# Generates a simple colored-circle-with-initials PNG.
+# Good enough for a demo booth; swap with real headshots later.
+
+AVATAR_COLORS = [
+    "#4A90D9",  # blue
+    "#5BA37C",  # green
+    "#C25B56",  # red
+    "#8B6DB8",  # purple
+]
+
+
+def _get_initials(display_name: str) -> str:
+    """'[Example] Jenna Morris' → 'JM'"""
+    clean = display_name.replace("[Example] ", "")
+    parts = clean.split()
+    return "".join(p[0].upper() for p in parts if p)[:2]
+
+
+def _generate_avatar_png(initials: str, color: str, size: int = 400) -> bytes:
+    """Create a colored-circle avatar with white initials, returned as PNG bytes."""
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # Circle background
+    draw.ellipse([0, 0, size - 1, size - 1], fill=color)
+
+    # Initials — try system font, fall back to default
+    font_size = size // 3
+    try:
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
+    except (OSError, IOError):
+        font = ImageFont.load_default()  # returns a tiny bitmap font (~illegible on fail)
+        # Railway Deploy -> Linux containers -> DejaVu is almost certainly there
+        # But if it isn't, you'd get a working but ugly avatar so here's a quick print log message to save future debugging
+        print(f"  ⚠ DejaVu font not found — falling back to default bitmap font (avatars may look rough)")
+
+    bbox = draw.textbbox((0, 0), initials, font=font)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
+    x = (size - text_w) / 2
+    y = (size - text_h) / 2 - bbox[1]  # offset for font ascent
+    draw.text((x, y), initials, fill="white", font=font)
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
 
 
 # ── Example profiles ─────────────────────────────────────────────
@@ -288,13 +345,34 @@ DEMO_PROVIDERS = [
 # ── Seed logic ───────────────────────────────────────────────────
 
 
+async def _upload_demo_photo(provider: Provider, color: str) -> str | None:
+    """Generate a placeholder avatar and upload it through the storage backend.
+
+    Returns the photo URL, or None if upload fails (don't block seeding
+    over a missing photo — log and move on).
+    """
+    # TODO: create storage backend once in seed_demo_providers() and pass it in
+    # instead of re-creating a boto3 client per provider (fine for 4, wasteful at scale)
+    storage = get_storage_backend()
+    initials = _get_initials(provider.display_name)
+    png_data = _generate_avatar_png(initials, color)
+    key = photo_key(str(provider.id), "image/png")
+
+    try:
+        url = await storage.upload(png_data, key)
+        return url
+    except Exception as e:
+        print(f"  ⚠ Photo upload failed for {provider.display_name}: {e}")
+        return None
+
+
 async def seed_demo_providers() -> None:
     """Create example providers, credentials, and locations.
 
     Skips any provider whose email already exists (safe to re-run).
     """
     async with async_session() as session:
-        for pdata in DEMO_PROVIDERS:
+        for i, pdata in enumerate(DEMO_PROVIDERS):
             existing = await get_user_by_email(session, pdata["email"])
             if existing:
                 print(f"  Example provider {pdata['email']} already exists — skipping.")
@@ -340,6 +418,15 @@ async def seed_demo_providers() -> None:
             session.add(provider)
             await session.flush()
 
+            # Photo — generate placeholder and upload through storage backend
+            color = AVATAR_COLORS[i % len(AVATAR_COLORS)]
+            photo_url = await _upload_demo_photo(provider, color)
+            if photo_url:
+                provider.photo_url = photo_url
+                session.add(provider)
+                await session.flush()
+                print(f"  📸 Uploaded demo photo for {provider.display_name}")
+
             # Credentials
             for code in pdata.get("credentials", []):
                 cred = ProviderCredential(
@@ -349,7 +436,7 @@ async def seed_demo_providers() -> None:
                 session.add(cred)
 
             # Locations (with hardcoded lat/lng — no Nominatim call needed)
-            for i, loc_data in enumerate(pdata.get("locations", [])):
+            for j, loc_data in enumerate(pdata.get("locations", [])):
                 location = ProviderLocation(
                     id=uuid.uuid4(),
                     provider_id=provider.id,
@@ -361,7 +448,7 @@ async def seed_demo_providers() -> None:
                     zip_code=loc_data.get("zip_code"),
                     latitude=loc_data["latitude"],
                     longitude=loc_data["longitude"],
-                    is_primary=loc_data.get("is_primary", i == 0),
+                    is_primary=loc_data.get("is_primary", j == 0),
                     is_public=loc_data.get("is_public", True),
                 )
                 session.add(location)
