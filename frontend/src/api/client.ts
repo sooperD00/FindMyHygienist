@@ -29,6 +29,7 @@ import type {
   SearchResponse,
   ProviderTypeOption,
 } from "../types/provider";
+import type { FeedbackRequest, FeedbackResponse } from "../types/feedback";
 
 // dev, local vs main, production
 const API_BASE = import.meta.env.VITE_API_URL
@@ -295,4 +296,16 @@ export async function apiDeleteLocation(id: string): Promise<void> {
   await apiFetch(`/me/locations/${id}`, { method: "DELETE" });
   // no return — backend returns 204 No Content
   // returns nothing because the UI just removes the card
+}
+
+// ── Feedback (no auth required) ───────────────────────────────────
+
+export async function apiSubmitFeedback(
+  data: FeedbackRequest
+): Promise<FeedbackResponse> {
+  const res = await apiFetch("/feedback", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  return res.json();
 }

@@ -13,6 +13,7 @@ import AdminRoute from "./components/AdminRoute";
 import Search from "./pages/Search";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
+import Feedback from "./pages/Feedback";
 import Join from "./pages/Join";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -29,6 +30,7 @@ function App() {
             <Route path="/providers/or/:city" element={<Search />} />
             <Route path="/providers/:slug/:id" element={<Profile />} />
             <Route path="/about" element={<About />} />
+            <Route path="/feedback" element={<Feedback />} />
             <Route path="/join" element={<Join />} />
             <Route path="/login" element={<Login />} />
             <Route
