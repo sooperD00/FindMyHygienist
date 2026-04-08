@@ -6,7 +6,7 @@
 
 ---
 
-## Sprint 14 — About Page & Feedback Endpoint (Day 20) - DONE 4/8 12:19p
+## Sprint 14 — About Page & Feedback Endpoint (Day 21) - DONE 4/8 12:19p
 
 **Goal:** Content that makes the app look finished. About page and the one piece of Sprint 14 that matters before the conference: a POST /api/feedback endpoint so the 'Report an issue' link on profiles has a database home instead of a mailto. One context window — all content creation, no CSS archaeology.
 
@@ -18,12 +18,13 @@
 
 ---
 
-## Fixes from feedback 4/6/2026 - DONE 4/7 10:50a
+## Fixes from feedback 4/6/2026 (Day 20) - DONE 4/7 10:50a
 
 - [x] Auth not working on mobile
 - [x] is registration dropdown writing max_distance?
 - [x] autoapprove = true needs to allow draft changes to auto-update when the conference env var is true (not just user approved)
 - [x] tag and release v0.1.0
+- [x] and a root canal, so, there's that
 
 ---
 
@@ -67,6 +68,10 @@
      because it's one table + one fire-and-forget insert, not a
      separate shape of work. Tag filtering and full-text search are
      separate context windows (post-conference). -->
+
+---
+
+## It was Easter - I didn't work and I didn't ship!! (Day 18) - DONE 4/5
 
 ---
 
