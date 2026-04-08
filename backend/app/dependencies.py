@@ -35,6 +35,9 @@ from app.services import session_service, profile_service
 from app.models.provider import Provider
 
 
+# LEARN: dependency that degrades gracefully pattern
+# get_current_user -> strict (401 or user)
+# get_current_user_or_none  -> wrap strict function and return None instead of raising (DRY)
 async def get_current_user(
     request: Request, db: AsyncSession = Depends(get_session)
 ) -> User:
@@ -59,6 +62,24 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="User not found or inactive")
 
     return user
+
+
+async def get_current_user_or_none(
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+) -> User | None:
+    """Behave differently if logged in but don't require it.
+    Uses existing auth dependency but swallows the 401.
+
+    try to read the session cookie, return the user if logged in,
+    return None if not.
+    
+    The endpoint stays unauthenticated. Field gets populated if auth present.
+    """
+    try:
+        return await get_current_user(request, db)
+    except HTTPException:
+        return None
 
 
 async def csrf_protect(

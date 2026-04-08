@@ -57,7 +57,6 @@ async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
     result = await db.execute(select(User).where(User.email == email.lower()))
     return result.scalars().first()
 
-
 # ── Registration ──────────────────────────────────────────────────
 
 # TODO: One registration function per role that has its own companion table.
