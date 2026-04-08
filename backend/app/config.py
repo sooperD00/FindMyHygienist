@@ -5,6 +5,9 @@ Pydantic settings, reads .env (single source of truth)
 Sprint 2 additions: session_lifetime_hours, debug, cors_origins,
 admin_password. The admin_password is only needed when running
 `python -m app.seed` — it's not read at app startup.
+
+Sprint 15 additions: S3-compatible storage config (Cloudflare R2).
+All optional — when unset, photos fall back to local filesystem.
 """
 
 from pydantic import Field
@@ -29,7 +32,7 @@ class Settings(BaseSettings):
     cookie_domain: str | None = Field(default=None)
 
     # Local filesystem path for photo uploads in dev (Sprint 5).
-    # Ignored in prod — S3 backend uses bucket config instead (Sprint 12).
+    # Ignored in prod — S3 backend uses bucket config instead (Sprint 15).
     photo_upload_dir: str = Field(default="./uploads")
 
     # Comma-separated allowed origins for CORS, e.g.
@@ -40,6 +43,15 @@ class Settings(BaseSettings):
     # Only needed for `python -m app.seed` to create admin user.
     # Not required at app startup — defaults to None.
     admin_password: str | None = Field(default=None)
+
+    # ── S3-compatible storage (Sprint 15, ADR-005) ───────────────
+    # All optional. When s3_bucket_name is set, the app uses S3StorageBackend.
+    # When unset, falls back to LocalStorageBackend (dev).
+    s3_endpoint_url: str | None = Field(default=None)
+    s3_access_key_id: str | None = Field(default=None)
+    s3_secret_access_key: str | None = Field(default=None)
+    s3_bucket_name: str | None = Field(default=None)
+    s3_public_url: str | None = Field(default=None)
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 
