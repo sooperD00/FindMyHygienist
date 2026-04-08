@@ -15,16 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.provider import Provider
 from app.services.storage import StorageBackend
 
-
-ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
-MAX_PHOTO_SIZE = 5 * 1024 * 1024  # 5 MB
-
-# content-type → file extension
-_EXT_MAP = {
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp",
-}
+from app.constants import IMAGE_TYPE_MAP, ALLOWED_CONTENT_TYPES, MAX_PHOTO_SIZE
 
 # fast and early exit on MIME string
 def validate_content_type(content_type: str) -> None:
@@ -60,7 +51,7 @@ def photo_key(provider_id: str, content_type: str) -> str:
 
     Example: photo_key("abc-123", "image/png") → "photos/abc-123.png"
     """
-    ext = _EXT_MAP[content_type]
+    ext = IMAGE_TYPE_MAP[content_type]
     return f"photos/{provider_id}.{ext}"
 
 

@@ -63,13 +63,7 @@ class LocalStorageBackend(StorageBackend):
 # If that ever matters, swap to aioboto3.
 
 # Content-type mapping — matches photo_service._EXT_MAP in reverse
-_CONTENT_TYPE_FROM_EXT = {
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".png": "image/png",
-    ".webp": "image/webp",
-}
-
+from app.constants import CONTENT_TYPE_FROM_EXT
 
 class S3StorageBackend(StorageBackend):
     """Upload/delete files on an S3-compatible bucket (R2, DO Spaces, AWS S3).
@@ -105,7 +99,7 @@ class S3StorageBackend(StorageBackend):
         → aioboto3 (real async).
         """
         ext = Path(key).suffix.lower()
-        content_type = _CONTENT_TYPE_FROM_EXT.get(ext, "application/octet-stream")
+        content_type = CONTENT_TYPE_FROM_EXT.get(ext, "application/octet-stream")
 
         self.client.put_object(
             Bucket=self.bucket_name,
