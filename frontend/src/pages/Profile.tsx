@@ -329,12 +329,12 @@ function Profile() {
 
       {/* ── Footer / report ─────────────────────────────────── */}
       <footer className="profile-footer">
-        <a
-          href={`mailto:${import.meta.env.VITE_SUPPORT_EMAIL}?subject=Issue with provider listing: ${profile.display_name}&body=Provider: ${profile.display_name}%0AProfile: ${window.location.href}%0A%0ADescribe the issue:%0A`}
+        <Link
+          to={`/feedback?type=REPORT_ISSUE&provider_id=${profile.id}&provider_name=${encodeURIComponent(profile.display_name)}`}
           className="profile-report-link"
         >
           Report an issue with this listing
-        </a>
+        </Link>
       </footer>
     </div>
   );

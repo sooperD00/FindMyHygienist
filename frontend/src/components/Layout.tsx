@@ -59,7 +59,7 @@ function Layout() {
       <footer>
         <p>
           © 2026 FindMyHygienist · <Link to="/about">About</Link> ·{" "}
-          <a href={`mailto:${import.meta.env.VITE_SUPPORT_EMAIL}`}>Give Us Feedback</a>
+          <Link to="/feedback">Give Us Feedback</Link>
         </p>
       </footer>
     </div>
