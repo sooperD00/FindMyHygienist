@@ -324,8 +324,7 @@ describe("Profile page", () => {
     await renderLoadedProfile();
 
     const link = screen.getByText("Report an issue with this listing");
-    expect(link.getAttribute("href")).toContain("mailto:");
-    expect(link.getAttribute("href")).toContain(import.meta.env.VITE_SUPPORT_EMAIL);
+    expect(link.getAttribute("href")).toContain("/feedback?type=REPORT_ISSUE");
   });
 
   /* ── Error states ────────────────────────────────────────── */
