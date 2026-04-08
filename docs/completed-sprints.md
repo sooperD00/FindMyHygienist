@@ -4,6 +4,17 @@
      Include the actual date range, any deviations from plan, and
      links to relevant commits or PRs. Latest sprints are at the top. -->
 
+---
+
+## Sprint 14 — About Page & Feedback Endpoint (Day 20) - DONE 4/8 12:19p
+
+**Goal:** Content that makes the app look finished. About page and the one piece of Sprint 14 that matters before the conference: a POST /api/feedback endpoint so the 'Report an issue' link on profiles has a database home instead of a mailto. One context window — all content creation, no CSS archaeology.
+
+- [x] Frontend: About page — what FindMyHygienist is, what provider types do, FAQ stub, link to ODHA
+- [x] ~~Seed data: 2-3 example provider profiles so the directory doesn't look empty at the conference~~ Done — seed_demo.py ships 4 example providers (Sprint 11)
+- [x] `POST /api/feedback` — submit feedback or report an issue (pulled forward from the deferred admin sprint — this is 1 endpoint, ~30 lines, no admin UI needed)
+- [x] Wire 'Report an issue' profile link and 'Give us feedback' nav/footer link to the new endpoint instead of mailto
+- [x] Microcopy revision pass on the search page (Sprint 13 shipped headline copy and search bar — revisit whether the copy around the search field signals what you want to hygienists and patients. See top of README.md for the voice.)
 
 ---
 
