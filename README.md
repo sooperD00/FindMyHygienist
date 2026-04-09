@@ -122,12 +122,12 @@ ohp-app/
 │   │       ├── location_service.py   # - [x] Sprint 5/11: location CRUD, is_primary management, max-10 guard, geocode on create/update
 │   │       ├── search_service.py    # - [x] Sprint 12: Haversine distance search, filter combinations, pagination, example-profile exclusion, search logging
 │   │       └── storage.py            # - [x] Sprint 5: storage abstraction — LocalStorage (dev), S3Storage interface ready (Sprint 16)
-│   └── tests/                          # - [x] PyTests: 188/188 pass
+│   └── tests/                          # - [x] PyTests: 203/203 pass
 │       ├── __init__.py
 │       ├── test_models.py              # - [x] Sprint 1: 25 tests: enum completeness, credentials.json integrity, model defaults
 │       ├── test_auth.py                # - [x] Sprint 2: 18 tests (no DB): argon2id roundtrip, pw len, token format, CSRF compare_digest, slug generation, Session model fields. No DB needed.
 │       ├── test_profile.py             # - [x] Sprint 4: 29 tests (no DB): schema validation, EDITABLE_FIELDS whitelist, response field presence (OwnProfile has draft+status, PublicProfile omits them), enum serialization sanity
-│       ├── test_photo.py               # - [x] Sprint 5: 28 tests (no DB): file validation (type, size, empty), storage abstraction, upload/delete flows, photo_url lifecycle
+│       ├── test_photo.py               # - [x] Sprint 5/15: 43 tests (no DB): file validation (type, size, empty), storage abstraction, upload/delete flows, photo_url lifecycle
 │       ├── test_locations.py           # - [x] Sprint 5: 28 tests (no DB): location CRUD schemas, is_primary logic, is_public filtering, max-10 limit, public vs own response fields
 │       ├── test_geocoding.py          # - [x] Sprint 11: 20 tests (no DB): geocode_zip, geocode_address, _geocode_location fallback chain, geocode-on-create/update integration
 │       └── test_search.py            # - [x] Sprint 12: 22 tests (no DB): Haversine math, filter combinations, pagination, empty results, search logging, example-profile exclusion + featured filter

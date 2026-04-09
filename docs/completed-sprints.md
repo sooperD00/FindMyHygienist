@@ -6,6 +6,31 @@
 
 ---
 
+## Sprint 15 — Persistent Photo Storage (S3-Compatible)
+
+**Goal:** Provider photos survive redeploys. The storage.py abstraction (Sprint 5) already defines the interface — this sprint implements S3Storage against a real bucket. Focus group asked for bio photos first; they have to work at the booth.
+
+- [x] Create Cloudflare R2 bucket (S3-compatible, zero egress fees, free tier covers FindMyHygienist's scale). DO Spaces is the fallback if R2 has any friction.
+- [x] Implement S3StorageBackend class in storage.py — boto3 put_object / delete_object against the R2 endpoint. The LocalStorage / S3Storage switch is already designed; this fills in the S3 side.
+- [x] Add S3 config fields to config.py (s3_endpoint_url, s3_access_key_id, s3_secret_access_key, s3_bucket_name, s3_public_url — all optional, local storage remains the fallback when unset)
+- [x] Add boto3 to requirements.txt
+- [x] Set R2/S3 env vars in Railway backend service (bucket name, access key, secret key, endpoint URL, public URL)
+- [x] Verify round-trip: upload photo via /api/me/photo → stored in R2 → photo_url serves publicly → delete works
+
+<!-- Code scope: ~30 lines of S3StorageBackend in storage.py, 5 config
+     fields, one if/else in get_storage_backend(), boto3 in requirements.
+     photo_service.py doesn't change — _key_from_url already handles
+     S3 URLs. main.py doesn't change — debug-only static mount is
+     already conditional. Fits one context window easily (~320 lines
+     across storage.py + config.py + photo_service.py + tests).
+
+     Railway's filesystem is ephemeral — every push to main wipes
+     uploaded photos. With auto-deploy on, photos MUST be on persistent
+     storage before the conference. This is why photos come before
+     UX polish. -->
+
+---
+
 ## Sprint 14 — About Page & Feedback Endpoint (Day 21) - DONE 4/8 12:19p
 
 **Goal:** Content that makes the app look finished. About page and the one piece of Sprint 14 that matters before the conference: a POST /api/feedback endpoint so the 'Report an issue' link on profiles has a database home instead of a mailto. One context window — all content creation, no CSS archaeology.
