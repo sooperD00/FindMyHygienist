@@ -9,7 +9,7 @@ from sqlalchemy import text
 async def check():
     async with engine.begin() as conn:
         result = await conn.execute(text(
-            "SELECT email FROM users WHERE email LIKE '%@example.com'"
+            "SELECT u.email, p.photo_url FROM providers p JOIN users u ON p.user_id = u.id WHERE u.email LIKE '%@example.com'"
         ))
         rows = result.fetchall()
         print(f"{len(rows)} rows found")
