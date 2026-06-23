@@ -274,4 +274,4 @@ Launched at the Oregon Dental Hygienists' Association conference in April 2026 â
 
 ## License
 
-TBD
+MIT License â€” see [LICENSE](LICENSE) for details.
