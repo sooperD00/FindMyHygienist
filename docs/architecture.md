@@ -393,8 +393,3 @@ Two entry points, same backend endpoint (`POST /api/feedback`), same database ta
 
 Both write a row to the `feedback` table. No email is sent — Nicole reviews feedback by querying the table directly (Railway console) until the admin UI ships post-conference. The feedback endpoint is unauthenticated but captures `submitted_by_user_id` when a logged-in user submits, so admin review can distinguish anonymous visitors from providers.
 
-<!-- Future: email notifications when feedback is submitted (so Nicole
-     doesn't have to poll the table) are a post-conference nice-to-have.
-     The admin UI (deferred) will surface feedback alongside the provider
-     review queue. Rate limiting on the endpoint is tracked in
-     remaining-sprints.md housekeeping. -->

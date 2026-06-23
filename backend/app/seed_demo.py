@@ -351,8 +351,8 @@ async def _upload_demo_photo(provider: Provider, color: str) -> str | None:
     Returns the photo URL, or None if upload fails (don't block seeding
     over a missing photo — log and move on).
     """
-    # TODO: create storage backend once in seed_demo_providers() and pass it in
-    # instead of re-creating a boto3 client per provider (fine for 4, wasteful at scale)
+    # Builds a storage backend per provider. Fine for 4 demo records; for bulk
+    # seeding, construct it once in the caller and pass it in.
     storage = get_storage_backend()
     initials = _get_initials(provider.display_name)
     png_data = _generate_avatar_png(initials, color)

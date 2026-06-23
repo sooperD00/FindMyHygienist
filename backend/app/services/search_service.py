@@ -86,8 +86,8 @@ async def search_providers(
       - featured=True: return ONLY providers tagged "example-profile"
     """
     # ── 1. Load approved providers ──
-    # Loading all approved providers into memory — fine at your current scale 
-    # (dozens to low hundreds). TODO: If you ever hit thousands, push filtering into SQL.
+    # Loads all approved providers into memory — fine at current scale (dozens
+    # to low hundreds). At thousands, push filtering into SQL.
     result = await db.execute(
         select(Provider).where(Provider.status == ProviderStatus.APPROVED)
     )
@@ -173,8 +173,8 @@ async def search_providers(
 
         # ── Filter: insurance (case-insensitive substring match) ──
         # "Med" would match "Medicare", "Medicaid", and "MedStar"
-        # TODO: is this waht you really want? You might have to review the logs
-        # or get provider feedback after people actually use this
+        # Substring match is intentionally loose ("Med" matches Medicare/Medicaid).
+        # Revisit against real search logs once providers are live.
         if insurance:
             accepted = provider.insurance_accepted or []
             if not any(insurance.lower() in ins.lower() for ins in accepted):

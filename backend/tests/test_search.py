@@ -238,10 +238,9 @@ class TestExampleProfileFiltering:
             if featured and not is_example: continue
             if not featured and is_example: continue
         """
-        # This duplicates logic from the service. Intentional and fine for now 
-        # (testing the rules, not the implementation), but TODO: that if the filtering 
-        # logic in search_service.py ever changes, this helper needs to change too — 
-        # otherwise the tests pass while the app behaves differently
+        # Intentionally duplicates the service's rule (testing the rule, not the
+        # implementation). If the tag-filtering logic in search_service.py changes,
+        # update this helper too — otherwise the tests pass while the app diverges.
         is_example = "example-profile" in tags
         if featured and not is_example:
             return False

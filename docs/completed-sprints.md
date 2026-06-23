@@ -1,9 +1,5 @@
 # Completed Sprints
 
-<!-- Move sprint sections here from remaining-sprints.md as they ship.
-     Include the actual date range, any deviations from plan, and
-     links to relevant commits or PRs. Latest sprints are at the top. -->
-
 ---
 
 ## Sprint 15 — Persistent Photo Storage (S3-Compatible)

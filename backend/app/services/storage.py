@@ -95,8 +95,8 @@ class S3StorageBackend(StorageBackend):
         for the duration of the HTTP round-trip to R2. For a single user uploading 
         a 2MB headshot, that's maybe 200ms.
 
-        TODO: if you need to do better: sync-in-async (now) → asyncio.to_thread (cheap fix) 
-        → aioboto3 (real async).
+        Scaling path if this ever becomes a bottleneck: asyncio.to_thread
+        (cheap), then aioboto3 (true async).
         """
         ext = Path(key).suffix.lower()
         content_type = CONTENT_TYPE_FROM_EXT.get(ext, "application/octet-stream")
@@ -119,8 +119,8 @@ class S3StorageBackend(StorageBackend):
             # delete_object on S3 is idempotent (returns 204 even if
             # key doesn't exist), but R2/DO Spaces might differ on edge
             # cases. Swallow errors — delete is best-effort. Also catches auth failures, 
-            # network errors, bucket-not-found. TODO: in a larger system, log the 
-            # exception and maybe narrow the catch
+            # network errors, bucket-not-found. In a larger system: log the
+            # exception and narrow the catch.
             pass
 
 
@@ -134,11 +134,9 @@ def get_storage_backend() -> StorageBackend:
     """
     from app.config import settings  # lazy import to avoid circular import
 
-    # TODO: get_storage_backend() creates a new client per call. Every time 
-    # FastAPI resolves this dependency, it instantiates a fresh boto3.client — 
-    # which involves an HTTP-level setup cost. Not a problem at demo scale.
-    # Later, implement production pattern: create the client once at startup 
-    # (e.g., in a FastAPI lifespan event) and reuse it.
+    # Instantiates a fresh boto3 client on every dependency resolution, which
+    # carries an HTTP-level setup cost — acceptable at current scale. Production
+    # pattern: build the client once at startup (FastAPI lifespan) and reuse it.
 
     if settings.s3_bucket_name:
         return S3StorageBackend(

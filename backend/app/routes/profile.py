@@ -318,7 +318,7 @@ async def update_own_profile(
     (live profile stays untouched until admin approves). If PENDING
     or CHANGES_REQUESTED, changes go directly to live fields.
     """
-    updates = body.model_dump(exclude_unset=True)  # # this is how the update patterns works; Fields the client didn't send are excluded, so they don't get overwritten to None; Pydantic equivalent of a SQL PATCH
+    updates = body.model_dump(exclude_unset=True)  # exclude_unset: omit fields the client didn't send (don't overwrite to None) — the Pydantic equivalent of a SQL PATCH
     # Convert EmailStr back to plain str for storage
     if "public_email" in updates and updates["public_email"] is not None:
         updates["public_email"] = str(updates["public_email"])

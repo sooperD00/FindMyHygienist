@@ -43,7 +43,7 @@ def verify_password(password: str, hash: str) -> bool:
 
 
 # length is the single biggest factor in password strength per NIST guidelines.
-# TODO: Fancier password rules (uppercase, numbers, etc.)
+# Complexity rules (mixed case, digits) can be layered on if policy requires.
 def validate_password(password: str) -> None:
     """Raise ValueError if password doesn't meet minimum requirements."""
     if len(password) < 8:

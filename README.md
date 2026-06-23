@@ -23,11 +23,70 @@ This is an Oregon-specific project in partnership with the [Oregon Dental Hygien
 
 Monorepo: `frontend/` and `backend/` at the root.
 
+## Engineering overview
+
+Built solo, spec-first: every non-trivial decision is an ADR in [`docs/decisions.md`](docs/decisions.md) (17 of them), and the system design lives in [`docs/architecture.md`](docs/architecture.md). ~300 tests (203 backend, 104 frontend). Shipped to production on Railway via a `dev` → `main` branch pipeline, with a public launch at the Oregon Dental Conference (April 2026).
+
+### System architecture
+
+```mermaid
+flowchart LR
+    User["Patient / Provider<br/>(browser)"]
+    subgraph RW["Railway"]
+      Web["web · findmyhygienist.org<br/>React + TypeScript + Vite"]
+      API["api · api.findmyhygienist.org<br/>FastAPI + SQLModel + asyncpg"]
+    end
+    PG[("PostgreSQL<br/>data + server-side sessions")]
+    R2[("Cloudflare R2 (S3-compatible)<br/>provider photos")]
+    NOM["Nominatim<br/>geocoding"]
+
+    User -->|"HTTPS · static app"| Web
+    User -->|"/api/* · session cookie + X-CSRF-Token"| API
+    API --> PG
+    API -->|"upload / serve"| R2
+    API -->|"zip / address → lat,lng"| NOM
+```
+
+Auth is session-based with server-side sessions in Postgres ([ADR-006](docs/decisions.md)), argon2id hashing ([ADR-011](docs/decisions.md)), and a CSRF synchronizer token validated against the session row rather than the cookie. Both services share `.findmyhygienist.org` cookies, so cross-subdomain auth behaves exactly like same-origin local dev ([ADR-017](docs/decisions.md)).
+
+### Branch & deploy pipeline
+
+```mermaid
+flowchart LR
+    Local["local dev<br/>uvicorn + vite proxy"]
+    subgraph GH["GitHub"]
+      DEV(["dev branch"])
+      MAIN(["main branch"])
+    end
+    subgraph RW2["Railway · auto-deploy on push"]
+      STG["staging services"]
+      PROD["production services"]
+    end
+    STGURL["dev.findmyhygienist.org"]
+    PRODURL["findmyhygienist.org"]
+
+    Local -->|push| DEV
+    DEV --> STG --> STGURL
+    DEV -->|"PR / merge once verified"| MAIN
+    MAIN --> PROD --> PRODURL
+```
+
+Railway watches each branch and redeploys on push: `dev` → staging, `main` → production. Conference releases were tagged in pairs (`v1.0.0-conference` on `main`, `v1.0.0-conference-dev` on `dev`) so both deployed states are pinned and reproducible.
+
+### Running the tests
+
+```bash
+cd backend && pytest      # 203 passing
+cd frontend && npm test   # 104 passing
+```
+
+(Local app setup is in [Quick Start](#quick-start) below.)
+
 ## Quick Start
 
 ```bash
 # Clone
-git clone https://github.com/your-username/ohp-app.git
+git clone https://github.com/sooperD00/FindMyHygienist.git
 cd ohp-app
 
 # Backend
@@ -61,7 +120,7 @@ The example providers are tagged `example-profile` and prefixed `[Example]` in t
 
 ## Project Structure
 
-> `[x]` = implemented and on disk. `[ ]` = planned — the file doesn't exist yet but its location is part of the design. This tree is both a map and a roadmap.
+> `[x]` = implemented and on disk, annotated with the sprint it landed in.
 
 ```
 ohp-app/
@@ -70,7 +129,6 @@ ohp-app/
 ├── docs/
 │   ├── architecture.md                 # - [x] init: System design, data model, API surface
 │   ├── decisions.md                    # - [x] init: ADRs (architecture decision records)
-│   ├── remaining-sprints.md            # - [x] init: What's next
 │   └── completed-sprints.md            # - [x] init: What's done
 ├── backend/
 │   ├── .env.example                    # - [x] Sprint 0: DATABASE_PUBLIC_URL, S3 creds, etc.
@@ -207,15 +265,12 @@ ohp-app/
 ## Docs
 
 - **[Architecture](docs/architecture.md)** — how the system fits together, data model, API routes, frontend pages
-- **[Decisions](docs/decisions.md)** — ADRs: what we chose and why
-- **[Sprint Plan](docs/remaining-sprints.md)** — what's left to build
-- **[Completed Sprints](docs/completed-sprints.md)** — what's shipped
+- **[Decisions](docs/decisions.md)** — ADRs: the choices behind the build and why
+- **[Completed Sprints](docs/completed-sprints.md)** — the sprint-by-sprint build log
 
-## Target Milestones
+## Status
 
-- **April 10, 2026** — ODHA conference demo. Providers can sign up, see their profile, search the directory. Admin approval flow operational.
-- **May 2026** — Backup conference date if needed; ODHA outreach channel regardless.
-- **July 2026** — End of free listing period; $15/month subscription begins for interested providers.
+Launched at the Oregon Dental Hygienists' Association conference in April 2026 — providers signed up, created profiles, and searched the live directory, with the admin approval flow running in production. This repository is a portfolio snapshot of that build.
 
 ## License
 

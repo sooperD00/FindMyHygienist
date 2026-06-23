@@ -164,7 +164,7 @@ function Feedback() {
             — Phase 2 */}
           <input
             id="feedback-email"
-            /*type="email" - you could make the browser enforce email format, but backend deliberately accepts any string*/
+            /* Could use type="email" to let the browser enforce format, but the backend deliberately accepts any string */
             /*type="text" inputMode="email" - mobile @ keyboard, no validation*/
             /*DECISION: The field is labeled "email," you might want to reply to it, 
             and the browser validation is a kindness, not a restriction*/

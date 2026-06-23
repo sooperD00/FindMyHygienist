@@ -295,14 +295,6 @@ Bool on User. False = can't log in. This is the nuclear option for accounts that
 
 Text column, nullable. Set by admin when requesting changes or suspending. Cleared when the provider resubmits or when admin approves. The provider dashboard shows this message — "Nicole says: please remove the phone number from your bio, it belongs in the contact section."
 
-<!-- This was already flagged in remaining-sprints.md (admin sprint) comment:
-     "Provider has no field for that message yet. Decide here: either add
-     an admin_message text column on Provider (simplest), or stash it
-     in the draft JSON blob." Decision: dedicated column. The message
-     is about the provider's relationship with admin, not about any
-     specific set of field edits. It survives draft approval/rejection
-     cycles. -->
-
 **Rationale:**
 
 - **No date inference.** The original plan required comparing draft timestamps against admin action timestamps to determine whose turn it was and whether to re-notify. That's fragile, hard to query, and creates edge cases around timezone handling and "what if the provider saves without changing anything?" A dedicated status field is unambiguous.

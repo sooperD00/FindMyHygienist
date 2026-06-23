@@ -91,10 +91,9 @@ async def _nominatim_search(
 ) -> GeocodingResult | None:
     """Shared Nominatim HTTP call. Returns first result or None."""
     try:
-        # TODO: every geocode opens and closes a TCP connection -  ok at a handlful 
-        # of provider saves per day scale. If you ever needed high throughput, create 
-        # one shared client at app startup and inject it ("client lifecycle management" 
-        # pattern in httpx docs)
+        # Opens and closes a TCP connection per geocode — fine at the current
+        # rate (a handful of provider saves per day). For high throughput, create
+        # one shared client at startup and inject it (httpx client-lifecycle pattern).
         async with httpx.AsyncClient() as client:
             resp = await client.get(
                 f"{NOMINATIM_BASE_URL}/search",

@@ -182,7 +182,7 @@ async def update_location(
     db: AsyncSession = Depends(get_session),
 ):
     """Update a location's fields. Ownership-checked."""
-    updates = body.model_dump(exclude_unset=True)  # this is how the update patterns works; Fields the client didn't send are excluded, so they don't get overwritten to None; Pydantic equivalent of a SQL PATCH
+    updates = body.model_dump(exclude_unset=True)  # exclude_unset: omit fields the client didn't send (don't overwrite to None) — the Pydantic equivalent of a SQL PATCH
     try:
         location = await location_service.update_location(
             db, provider.id, location_id, updates
