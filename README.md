@@ -270,7 +270,7 @@ ohp-app/
 
 ## Status
 
-Launched at the Oregon Dental Hygienists' Association conference in April 2026 — providers signed up, created profiles, and searched the live directory, with the admin approval flow running in production. This repository is a portfolio snapshot of that build.
+Launched at the Oregon Dental Hygienists' Association conference in April 2026. Providers signed up, created profiles, and searched the live directory. The conference ran in auto-approve mode, so new profiles went live at signup. The admin review queue is designed ([ADR-003, ADR-012](docs/decisions.md)) but not built yet. This repository is a portfolio snapshot of that build.
 
 ## License
 

@@ -272,6 +272,8 @@ Seed data (17 entries):
 
 ### Admin (authenticated, role=ADMIN only)
 
+*Deferred.* These routes are designed but not built. The conference ran in auto-approve mode, and ADR-012 reworks the review states these routes depend on.
+
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/admin/queue` | Providers pending review (new signups + profiles with drafts) |
@@ -307,7 +309,7 @@ Seed data (17 entries):
 
 | Route | Page | Notes |
 |-------|------|-------|
-| `/admin` | Admin Dashboard | Review queue, provider list, feedback inbox. Single page with tabs, or very few pages — this doesn't need to be fancy, just functional. |
+| `/admin` | Admin Dashboard | *Deferred.* Today it's a stub behind the admin route guard. Planned: review queue, provider list, feedback inbox. Single page with tabs, or very few pages — this doesn't need to be fancy, just functional. |
 
 ---
 
